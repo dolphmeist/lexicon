@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Arabic Lexicon Library — مكتبة المعاجم</title>
+
+<!-- Amiri Quran (Qur'anic / display) + Scheherazade New (Arabic body). Swap to self-hosted to match the tafsir site exactly. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* -------- Self-hosted Brill (Latin). Drop the woff2 into ./fonts/ ; falls back to serif until then. -------- */
+  @font-face {
+    font-family: "Brill";
+    src: url("./fonts/Brill-Roman.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Brill";
+    src: url("./fonts/Brill-Italic.woff2") format("woff2");
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: "Brill";
+    src: url("./fonts/Brill-Bold.woff2") format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+
+  :root {
+    --ink:        #1b2447;   /* indigo */
+    --gold:       #c9a227;   /* gold  */
+    --paper:      #faf6ee;   /* paper */
+    --ink-soft:   #2c396a;
+    --gold-soft:  #e6d49a;
+    --line:       #e3dac3;
+    --paper-2:    #f3ecdc;
+    --ink-mute:   #6a708a;
+
+    --latin: "Brill", "Cormorant Garamond", Georgia, serif;
+    --arabic: "Scheherazade New", serif;
+    --quran: "Amiri Quran", "Scheherazade New", serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--latin);
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--ink); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* -------------------- Illuminated header -------------------- */
+  header.masthead {
+    text-align: center;
+    padding: 34px 20px 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .masthead .frame {
+    display: inline-block;
+    padding: 22px 46px 20px;
+    border: 2px solid var(--gold);
+    border-radius: 3px;
+    position: relative;
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      repeating-linear-gradient(45deg, var(--gold-soft) 0 6px, transparent 6px 12px) border-box;
+  }
+  .masthead .frame::before,
+  .masthead .frame::after {
+    content: "";
+    position: absolute;
+    left: 8px; right: 8px;
+    height: 1px;
+    background: var(--gold);
+    opacity: .5;
+  }
+  .masthead .frame::before { top: 8px; }
+  .masthead .frame::after  { bottom: 8px; }
+
+  .masthead .title-ar {
+    font-family: var(--quran);
+    font-size: 40px;
+    color: var(--ink);
+    direction: rtl;
+    line-height: 1.2;
+    margin: 0 0 4px;
+  }
+  .masthead .title-en {
+    font-family: var(--latin);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-size: 15px;
+    color: var(--gold);
+    margin: 0;
+  }
+  .masthead .sub {
+    margin: 16px auto 0;
+    max-width: 560px;
+    color: var(--ink-mute);
+    font-size: 15px;
+    font-style: italic;
+  }
+
+  /* -------------------- Command bar -------------------- */
+  .command {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 8px;
+  }
+  @media (max-width: 680px) { .command { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 7px;
+  }
+  .field label .ar { font-family: var(--arabic); text-transform: none; letter-spacing: 0; font-size: 15px; color: var(--gold); }
+
+  /* Root search input */
+  .root-search {
+    width: 100%;
+    font-family: var(--arabic);
+    font-size: 24px;
+    text-align: center;
+    direction: rtl;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .root-search::placeholder { color: #b9b19a; font-size: 19px; }
+  .root-search:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px var(--gold-soft);
+  }
+
+  /* ROOT-CONVERTER INSERTION POINT: the word→root tool will slot into the command bar here, later. */
+
+  /* Custom floating dropdown (not a native select) */
+  .dropdown { position: relative; }
+  .dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: var(--latin);
+    font-size: 17px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .dropdown-btn:focus-visible { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+  .dropdown-btn[aria-expanded="true"] { border-color: var(--gold); }
+  .dropdown-btn .placeholder { color: #b9b19a; }
+  .caret {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid var(--gold);
+    transition: transform .18s ease;
+    flex: none;
+  }
+  .dropdown-btn[aria-expanded="true"] .caret { transform: rotate(180deg); }
+
+  .dropdown-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: #fff;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    box-shadow: 0 12px 30px rgba(27,36,71,.16);
+    z-index: 40;
+    overflow: hidden;
+    display: none;
+  }
+  .dropdown-panel.open { display: block; }
+  .dropdown-opt {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--paper-2);
+  }
+  .dropdown-opt:last-child { border-bottom: 0; }
+  .dropdown-opt:hover, .dropdown-opt.active { background: var(--paper-2); }
+  .dropdown-opt .opt-en { font-family: var(--latin); font-size: 16px; }
+  .dropdown-opt .opt-ar { font-family: var(--arabic); font-size: 19px; color: var(--ink-soft); direction: rtl; }
+
+  /* -------------------- Toolbar (تشكيل toggle) -------------------- */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin: 26px 0 14px;
+    min-height: 34px;
+  }
+  .tashkil-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--arabic);
+    font-size: 17px;
+    color: var(--ink-mute);
+    transition: all .15s;
+  }
+  .tashkil-toggle[aria-pressed="true"] {
+    border-color: var(--gold);
+    color: var(--ink);
+    background: var(--paper-2);
+  }
+  .tashkil-toggle .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--line);
+  }
+  .tashkil-toggle[aria-pressed="true"] .dot { background: var(--gold); }
+
+  /* -------------------- Entry region -------------------- */
+  .entry-head {
+    border-top: 2px solid var(--gold);
+    border-bottom: 1px solid var(--line);
+    padding: 20px 0 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .entry-head .root-display {
+    font-family: var(--quran);
+    font-size: 44px;
+    letter-spacing: .12em;
+    direction: rtl;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .entry-head .meta {
+    text-align: right;
+    color: var(--ink-mute);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .entry-head .meta .lex-en { color: var(--ink); font-size: 16px; }
+  .entry-head .meta .lex-ar { font-family: var(--arabic); font-size: 18px; color: var(--ink-soft); }
+
+  /* Bilingual two-column paragraph rows */
+  .para {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 34px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--paper-2);
+  }
+  @media (max-width: 680px) { .para { grid-template-columns: 1fr; gap: 14px; } }
+
+  .para .ar {
+    direction: rtl;
+    text-align: right;
+    font-family: var(--arabic);
+    font-size: 22px;
+    line-height: 2;
+    color: var(--ink);
+  }
+  .para .en {
+    direction: ltr;
+    text-align: left;
+    font-family: var(--latin);
+    font-size: 17.5px;
+    line-height: 1.75;
+    color: #2a2f45;
+  }
+  /* analysed term *italics* */
+  .para em, .para .term { font-style: italic; color: var(--ink-soft); }
+  .para .ar .term { font-style: normal; color: var(--gold); }
+  /* Qur'anic shāhid **{ }** */
+  .shahid {
+    font-family: var(--quran);
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .para .en .shahid { color: var(--ink-soft); }
+
+  /* Gold page pill between paragraphs */
+  .page-pill-row { display: flex; justify-content: center; padding: 4px 0; }
+  .page-pill {
+    font-family: var(--latin);
+    font-size: 12.5px;
+    letter-spacing: .06em;
+    color: var(--ink);
+    background: var(--gold-soft);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    padding: 2px 12px;
+    direction: ltr;
+  }
+
+  /* Cite buttons */
+  .cite-row { display: flex; gap: 10px; padding: 18px 0 4px; flex-wrap: wrap; }
+  .cite-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--latin);
+    font-size: 15px;
+    transition: background .15s, color .15s;
+  }
+  .cite-btn.ar { font-family: var(--arabic); font-size: 18px; }
+  .cite-btn:hover { background: var(--ink-soft); }
+  .cite-btn.copied { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+  /* Empty / loading states */
+  .state {
+    text-align: center;
+    color: var(--ink-mute);
+    font-style: italic;
+    padding: 70px 20px;
+    font-size: 17px;
+  }
+  .state .ar { font-family: var(--arabic); font-style: normal; display: block; margin-top: 8px; font-size: 20px; color: var(--ink-soft); direction: rtl; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 13px;
+  }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <!-- ===================== Masthead ===================== -->
+  <header class="masthead">
+    <div class="frame">
+      <h1 class="title-ar">مكتبة المعاجم</h1>
+      <p class="title-en">Arabic Lexicon Library</p>
+    </div>
+    <p class="sub">Classical dictionaries of the Arabic language, arranged by root.</p>
+  </header>
+
+  <!-- ===================== Command bar ===================== -->
+  <div class="command">
+    <div class="field">
+      <label for="rootSearch">Root <span class="ar">الجذر</span></label>
+      <input id="rootSearch" class="root-search" type="text" inputmode="text"
+             placeholder="Type a root — e.g. ك ت ب" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="field">
+      <label>Lexicon <span class="ar">المعجم</span></label>
+      <div class="dropdown" id="lexDropdown">
+        <button type="button" class="dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span class="label placeholder">Choose a lexicon</span>
+          <span class="caret" aria-hidden="true"></span>
+        </button>
+        <div class="dropdown-panel" role="listbox" aria-label="Lexicon"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== Toolbar ===================== -->
+  <div class="toolbar">
+    <button type="button" class="tashkil-toggle" id="tashkilToggle" aria-pressed="false">
+      <span class="dot" aria-hidden="true"></span>
+      تَشْكِيل
+    </button>
+  </div>
+
+  <!-- ===================== Entry region ===================== -->
+  <main id="entry" aria-live="polite">
+    <div class="state">
+      Select a root and a lexicon to read its entry.
+      <span class="ar">اختر جذرًا ومعجمًا لعرض المادة.</span>
+    </div>
+  </main>
+
+  <footer>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.
+  </footer>
+
+</div>
+
+<script>
+/* =====================================================================
+   DATA  — keyed by normalised root, then by lexicon id.
+   Schema per record: { lexicon, root, root_display, forms:[…],
+                        citation:{volume,page_from,page_to},
+                        entries:[ { ar, ar_vocalised, en, pg, note } ] }
+   forms: derived words this entry governs (كتب، كتاب، كاتب…), unvocalised.
+          Not used by the UI yet — it feeds the future word→root lookup.
+   Inline conventions:  *term*  → analysed term (italic)
+                        **{ … }** → Qur'anic shāhid (bold, Amiri)
+                        pg "vol:page" drives the gold page pills.
+   The single record below is THROWAWAY SAMPLE DATA (its text says so, in
+   both languages) purely to show the components render. Delete it and
+   replace with real records as they're produced.
+   ===================================================================== */
+const LEXICA = [
+  { id: "lisan",    en: "Lisān al-ʿArab",              ar: "لسان العرب" },
+  { id: "taj",      en: "Tāj al-ʿArūs",                ar: "تاج العروس" },
+  { id: "qamus",    en: "al-Qāmūs al-Muḥīṭ",           ar: "القاموس المحيط" },
+  { id: "maqayis",  en: "Maqāyīs al-Lugha",            ar: "مقاييس اللغة" },
+  { id: "sihah",    en: "al-Ṣiḥāḥ (al-Jawharī)",       ar: "الصحاح" },
+  { id: "mufradat", en: "Mufradāt al-Rāghib al-Iṣfahānī", ar: "مفردات الراغب" }
+];
+
+const DATA = {
+  "كتب": {
+    "lisan": {
+      lexicon: "lisan",
+      root: "كتب",
+      root_display: "ك ت ب",
+      forms: ["كتب", "كتاب", "كاتب", "مكتوب", "كتّاب", "كتيبة"],
+      citation: { volume: 1, page_from: 698, page_to: 699 },
+      entries: [
+        {
+          ar: "هذا نص تجريبي لعرض التنسيق فقط. المصطلح المحلَّل يظهر هكذا: *الكتاب*.",
+          ar_vocalised: "هٰذَا نَصٌّ تَجْرِيبِيٌّ لِعَرْضِ التَّنْسِيقِ فَقَط. المُصْطَلَحُ المُحَلَّلُ يَظْهَرُ هٰكَذَا: *الكِتَاب*.",
+          en: "Sample text — this demonstrates the two-column render and an analysed term, *al-kitāb*. Replace with real translated content.",
+          pg: "1:698",
+          note: ""
+        },
+        {
+          ar: "ويستشهد بقوله تعالى: **{ فَٱكْتُبُوهُ }**، والباقي نص تجريبي.",
+          ar_vocalised: "وَيُسْتَشْهَدُ بِقَوْلِهِ تَعَالَى: **{ فَٱكْتُبُوهُ }**، وَالبَاقِي نَصٌّ تَجْرِيبِيٌّ.",
+          en: "A Qur'anic shāhid renders in bold: **{ fa-ktubūhu }**. Everything else here is placeholder text.",
+          pg: "1:698",
+          note: ""
+        },
+        {
+          ar: "يبدأ هنا محتوى الصفحة التالية لبيان شارة رقم الصفحة الذهبية.",
+          ar_vocalised: "يَبْدَأُ هُنَا مُحْتَوَى الصَّفْحَةِ التَّالِيَةِ لِبَيَانِ شَارَةِ رَقْمِ الصَّفْحَةِ الذَّهَبِيَّة.",
+          en: "This paragraph begins the next page, so the gold page pill appears above it.",
+          pg: "1:699",
+          note: "sample collation note — editions may differ here"
+        }
+      ]
+    }
+  }
+};
+
+/* --------------------------- State --------------------------- */
+let state = { root: null, lex: null, tashkil: false };
+
+/* --------------------------- Helpers --------------------------- */
+const normRoot = s => (s || "")
+  .replace(/[\u064B-\u0652\u0670\u0640]/g, "") // strip tashkīl + tatweel
+  .replace(/\s+/g, "")
+  .trim();
+
+// Inline formatter: **{ … }** shāhid first, then *term*.
+function fmt(text) {
+  if (!text) return "";
+  let out = text.replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+  out = out.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">$1</span>');
+  out = out.replace(/\*([^*]+)\*/g, '<span class="term">$1</span>');
+  return out;
+}
+
+function lexById(id) { return LEXICA.find(l => l.id === id); }
+
+/* --------------------------- Render --------------------------- */
+const entryEl = document.getElementById("entry");
+
+function stateBlock(en, ar) {
+  return `<div class="state">${en}<span class="ar">${ar}</span></div>`;
+}
+
+function render() {
+  const { root, lex } = state;
+
+  if (!root && !lex) {
+    entryEl.innerHTML = stateBlock("Select a root and a lexicon to read its entry.", "اختر جذرًا ومعجمًا لعرض المادة.");
+    return;
+  }
+  if (!root) { entryEl.innerHTML = stateBlock("Type a root to begin.", "اكتب جذرًا للبدء."); return; }
+  if (!lex)  { entryEl.innerHTML = stateBlock("Choose a lexicon for this root.", "اختر معجمًا لهذا الجذر."); return; }
+
+  const rec = DATA[root] && DATA[root][lex];
+  if (!DATA[root]) {
+    entryEl.innerHTML = stateBlock(`No entry for “${root}” in the loaded data yet.`, "لا توجد مادة لهذا الجذر بعد.");
+    return;
+  }
+  if (!rec) {
+    const L = lexById(lex);
+    entryEl.innerHTML = stateBlock(`“${root}” isn't available in ${L ? L.en : "this lexicon"} yet.`, "هذا الجذر غير متوفر في هذا المعجم بعد.");
+    return;
+  }
+
+  const L = lexById(lex);
+  const c = rec.citation;
+  const pagesEn = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
+
+  let html = `
+    <div class="entry-head">
+      <div class="root-display" dir="rtl">${rec.root_display}</div>
+      <div class="meta">
+        <div class="lex-en">${L.en}</div>
+        <div class="lex-ar" dir="rtl">${L.ar}</div>
+        <div>vol. ${c.volume}, ${pagesEn}</div>
+      </div>
+    </div>`;
+
+  let prevPage = null;
+  rec.entries.forEach(p => {
+    if (p.pg && p.pg !== prevPage) {
+      html += `<div class="page-pill-row"><span class="page-pill">${p.pg}</span></div>`;
+      prevPage = p.pg;
+    }
+    const ar = state.tashkil ? (p.ar_vocalised || p.ar) : (p.ar || p.ar_vocalised);
+    html += `
+      <div class="para">
+        <div class="ar" dir="rtl">${fmt(ar)}</div>
+        <div class="en" dir="ltr">${fmt(p.en)}</div>
+      </div>`;
+  });
+
+  html += `
+    <div class="cite-row">
+      <button type="button" class="cite-btn" data-cite="en">Cite</button>
+      <button type="button" class="cite-btn ar" data-cite="ar">استشهاد</button>
+    </div>`;
+
+  entryEl.innerHTML = html;
+
+  const arNum = n => String(n).replace(/[0-9]/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+  entryEl.querySelectorAll(".cite-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      let text;
+      if (btn.dataset.cite === "en") {
+        text = `${L.en}, vol. ${c.volume}, ${pagesEn}, s.v. ${rec.root_display}.`;
+      } else {
+        const pAr = c.page_from === c.page_to ? `ص ${arNum(c.page_from)}` : `ص ${arNum(c.page_from)}–${arNum(c.page_to)}`;
+        text = `${L.ar}، ج ${arNum(c.volume)}، ${pAr}، مادة ${rec.root_display}.`;
+      }
+      navigator.clipboard && navigator.clipboard.writeText(text);
+      const original = btn.textContent;
+      btn.classList.add("copied");
+      btn.textContent = btn.dataset.cite === "en" ? "Copied" : "نُسِخ";
+      setTimeout(() => { btn.classList.remove("copied"); btn.textContent = original; }, 1300);
+    });
+  });
+}
+
+/* --------------------------- Lexicon dropdown --------------------------- */
+(function buildDropdown() {
+  const dd = document.getElementById("lexDropdown");
+  const btn = dd.querySelector(".dropdown-btn");
+  const panel = dd.querySelector(".dropdown-panel");
+  const label = dd.querySelector(".label");
+
+  panel.innerHTML = LEXICA.map(l =>
+    `<div class="dropdown-opt" role="option" data-id="${l.id}">
+       <span class="opt-en">${l.en}</span>
+       <span class="opt-ar" dir="rtl">${l.ar}</span>
+     </div>`).join("");
+
+  const close = () => { panel.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
+  const open  = () => { panel.classList.add("open");  btn.setAttribute("aria-expanded", "true"); };
+
+  btn.addEventListener("click", () => panel.classList.contains("open") ? close() : open());
+  btn.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+  panel.querySelectorAll(".dropdown-opt").forEach(opt => {
+    opt.addEventListener("click", () => {
+      const id = opt.dataset.id, L = lexById(id);
+      state.lex = id;
+      label.textContent = L.en;
+      label.classList.remove("placeholder");
+      panel.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o === opt));
+      close();
+      syncHash();
+      render();
+    });
+  });
+
+  document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+})();
+
+/* --------------------------- Root search --------------------------- */
+const rootInput = document.getElementById("rootSearch");
+function commitRoot() {
+  const r = normRoot(rootInput.value);
+  state.root = r || null;
+  syncHash();
+  render();
+}
+rootInput.addEventListener("keydown", e => { if (e.key === "Enter") commitRoot(); });
+rootInput.addEventListener("blur", commitRoot);
+
+/* --------------------------- تشكيل toggle --------------------------- */
+const tashkilBtn = document.getElementById("tashkilToggle");
+tashkilBtn.addEventListener("click", () => {
+  state.tashkil = !state.tashkil;
+  tashkilBtn.setAttribute("aria-pressed", String(state.tashkil));
+  render();
+});
+
+/* --------------------------- Deep-linking (#root=…&lex=…) --------------------------- */
+function syncHash() {
+  const parts = [];
+  if (state.root) parts.push("root=" + encodeURIComponent(state.root));
+  if (state.lex)  parts.push("lex=" + state.lex);
+  history.replaceState(null, "", parts.length ? "#" + parts.join("&") : location.pathname);
+}
+function readHash() {
+  const h = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const r = h.get("root"), l = h.get("lex");
+  if (r) {
+    state.root = normRoot(decodeURIComponent(r));
+    rootInput.value = (DATA[state.root] && Object.values(DATA[state.root])[0]?.root_display) || state.root;
+  }
+  if (l && lexById(l)) {
+    state.lex = l;
+    const dd = document.getElementById("lexDropdown");
+    const label = dd.querySelector(".label");
+    label.textContent = lexById(l).en;
+    label.classList.remove("placeholder");
+    dd.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o.dataset.id === l));
+  }
+}
+
+readHash();
+render();
+</script>
+</body>
+</html>
