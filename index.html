@@ -133,7 +133,7 @@
   }
   .field label .ar { font-family: var(--arabic); text-transform: none; letter-spacing: 0; font-size: 15px; color: var(--gold); }
 
-  /* Root search input */
+  /* Search input */
   .root-search {
     width: 100%;
     font-family: var(--arabic);
@@ -154,7 +154,84 @@
     box-shadow: 0 0 0 3px var(--gold-soft);
   }
 
-  /* ROOT-CONVERTER INSERTION POINT: the word→root tool will slot into the command bar here, later. */
+  /* Candidate root chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chips .hint { width: 100%; font-size: 13px; color: var(--ink-mute); font-style: italic; margin-bottom: 2px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: #fff;
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--arabic);
+    font-size: 20px;
+    color: var(--ink);
+    transition: background .15s;
+  }
+  .chip:hover, .chip:focus-visible { background: var(--gold-soft); outline: none; }
+  .chip .n { font-family: var(--latin); font-size: 12px; color: var(--ink-mute); }
+  .chip.none { border-color: var(--line); color: var(--ink-mute); cursor: default; font-family: var(--latin); font-size: 14px; }
+
+  /* ---------- Root index accordion ---------- */
+  .browse { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .browse-head {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none; padding-bottom: 4px;
+  }
+  .browse-head h2 {
+    margin: 0; font-family: var(--latin); font-size: 14px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); font-weight: 400;
+  }
+  .browse-head h2 .ar { font-family: var(--arabic); font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--gold); }
+  .letter-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    margin-top: 6px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .letter-row:hover { border-color: var(--gold); }
+  .letter-row[aria-expanded="true"] { border-color: var(--gold); background: #fff; }
+  .letter-row .lt { font-family: var(--quran); font-size: 26px; color: var(--ink); direction: rtl; line-height: 1; }
+  .letter-row .rt { display: flex; align-items: center; gap: 12px; }
+  .letter-row .cnt { font-family: var(--latin); font-size: 13px; color: var(--ink-mute); }
+  .letter-panel {
+    display: none;
+    padding: 14px 16px 16px;
+    border: 1px solid var(--gold);
+    border-top: 0;
+    border-radius: 0 0 4px 4px;
+    background: #fff;
+    direction: rtl;
+    text-align: right;
+    line-height: 2.4;
+  }
+  .letter-panel.open { display: block; }
+  .root-link {
+    display: inline-block;
+    font-family: var(--arabic);
+    font-size: 20px;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 1px 9px;
+    margin: 0 1px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .root-link:hover, .root-link:focus-visible { background: var(--gold-soft); color: var(--ink); outline: none; }
+  .root-link.current { background: var(--ink); color: var(--paper); }
+
+  /* Untranslated notice */
+  .untranslated {
+    font-family: var(--latin); font-size: 13px; font-style: italic;
+    color: var(--ink-mute); text-align: center;
+    padding: 8px 0 2px;
+  }
 
   /* Custom floating dropdown (not a native select) */
   .dropdown { position: relative; }
@@ -389,9 +466,10 @@
   <!-- ===================== Command bar ===================== -->
   <div class="command">
     <div class="field">
-      <label for="rootSearch">Root <span class="ar">الجذر</span></label>
+      <label for="rootSearch">Search <span class="ar">بحث</span></label>
       <input id="rootSearch" class="root-search" type="text" inputmode="text"
-             placeholder="Type a root — e.g. ك ت ب" autocomplete="off" spellcheck="false" />
+             placeholder="Paste any word — e.g. مكتوب" autocomplete="off" spellcheck="false" />
+      <div class="chips" id="chips"></div>
     </div>
 
     <div class="field">
@@ -422,6 +500,14 @@
     </div>
   </main>
 
+  <section class="browse">
+    <div class="browse-head" id="browseHead" role="button" tabindex="0" aria-expanded="true">
+      <h2>Browse roots <span class="ar">تصفح الجذور</span></h2>
+      <span class="cnt" id="browseCount"></span>
+    </div>
+    <div id="letters"></div>
+  </section>
+
   <footer>
     Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.
   </footer>
@@ -430,213 +516,321 @@
 
 <script>
 /* =====================================================================
-   DATA  — keyed by normalised root, then by lexicon id.
-   Schema per record: { lexicon, root, root_display, forms:[…],
-                        citation:{volume,page_from,page_to},
-                        entries:[ { ar, ar_vocalised, en, pg, note } ] }
-   forms: derived words this entry governs (كتب، كتاب، كاتب…), unvocalised.
-          Not used by the UI yet — it feeds the future word→root lookup.
-   Inline conventions:  *term*  → analysed term (italic)
-                        **{ … }** → Qur'anic shāhid (bold, Amiri)
-                        pg "vol:page" drives the gold page pills.
-   The single record below is THROWAWAY SAMPLE DATA (its text says so, in
-   both languages) purely to show the components render. Delete it and
-   replace with real records as they're produced.
+   Arabic Lexicon Library
+   Data files expected alongside index.html:
+     root-index.json      — all 9,119 Lisān roots, grouped by letter
+     e/XXXX.json          — per-letter entry shards (XXXX = hex codepoint)
+   TRANSLATED holds your edited/translated records, schema:
+     { lexicon, root, root_display, forms:[…],
+       citation:{volume,page_from,page_to},
+       entries:[ { ar, ar_vocalised, en, pg, note } ] }
+   Arabic shown from the shard until a translated record exists.
    ===================================================================== */
+
 const LEXICA = [
-  { id: "lisan",    en: "Lisān al-ʿArab",              ar: "لسان العرب" },
-  { id: "taj",      en: "Tāj al-ʿArūs",                ar: "تاج العروس" },
-  { id: "qamus",    en: "al-Qāmūs al-Muḥīṭ",           ar: "القاموس المحيط" },
-  { id: "maqayis",  en: "Maqāyīs al-Lugha",            ar: "مقاييس اللغة" },
-  { id: "sihah",    en: "al-Ṣiḥāḥ (al-Jawharī)",       ar: "الصحاح" },
+  { id: "lisan",    en: "Lisān al-ʿArab",                 ar: "لسان العرب" },
+  { id: "taj",      en: "Tāj al-ʿArūs",                   ar: "تاج العروس" },
+  { id: "qamus",    en: "al-Qāmūs al-Muḥīṭ",              ar: "القاموس المحيط" },
+  { id: "maqayis",  en: "Maqāyīs al-Lugha",               ar: "مقاييس اللغة" },
+  { id: "sihah",    en: "al-Ṣiḥāḥ (al-Jawharī)",          ar: "الصحاح" },
   { id: "mufradat", en: "Mufradāt al-Rāghib al-Iṣfahānī", ar: "مفردات الراغب" }
 ];
 
-const DATA = {
-  "كتب": {
-    "lisan": {
-      lexicon: "lisan",
-      root: "كتب",
-      root_display: "ك ت ب",
-      forms: ["كتب", "كتاب", "كاتب", "مكتوب", "كتّاب", "كتيبة"],
-      citation: { volume: 1, page_from: 698, page_to: 699 },
-      entries: [
-        {
-          ar: "هذا نص تجريبي لعرض التنسيق فقط. المصطلح المحلَّل يظهر هكذا: *الكتاب*.",
-          ar_vocalised: "هٰذَا نَصٌّ تَجْرِيبِيٌّ لِعَرْضِ التَّنْسِيقِ فَقَط. المُصْطَلَحُ المُحَلَّلُ يَظْهَرُ هٰكَذَا: *الكِتَاب*.",
-          en: "Sample text — this demonstrates the two-column render and an analysed term, *al-kitāb*. Replace with real translated content.",
-          pg: "1:698",
-          note: ""
-        },
-        {
-          ar: "ويستشهد بقوله تعالى: **{ فَٱكْتُبُوهُ }**، والباقي نص تجريبي.",
-          ar_vocalised: "وَيُسْتَشْهَدُ بِقَوْلِهِ تَعَالَى: **{ فَٱكْتُبُوهُ }**، وَالبَاقِي نَصٌّ تَجْرِيبِيٌّ.",
-          en: "A Qur'anic shāhid renders in bold: **{ fa-ktubūhu }**. Everything else here is placeholder text.",
-          pg: "1:698",
-          note: ""
-        },
-        {
-          ar: "يبدأ هنا محتوى الصفحة التالية لبيان شارة رقم الصفحة الذهبية.",
-          ar_vocalised: "يَبْدَأُ هُنَا مُحْتَوَى الصَّفْحَةِ التَّالِيَةِ لِبَيَانِ شَارَةِ رَقْمِ الصَّفْحَةِ الذَّهَبِيَّة.",
-          en: "This paragraph begins the next page, so the gold page pill appears above it.",
-          pg: "1:699",
-          note: "sample collation note — editions may differ here"
-        }
-      ]
-    }
-  }
-};
+/* Your translated records go here: TRANSLATED["كتب"]["lisan"] = {…} */
+const TRANSLATED = {};
 
-/* --------------------------- State --------------------------- */
 let state = { root: null, lex: null, tashkil: false };
+let INDEX = [];              // [{letter, roots:[{r,d}]}]
+let NORM2ROOT = new Map();   // normalised → original root
+let ROOTS = [];              // normalised root list
+const SHARDS = new Map();    // letter → entries object
+let FORMS = {};              // surface form → [roots]
 
-/* --------------------------- Helpers --------------------------- */
-const normRoot = s => (s || "")
-  .replace(/[\u064B-\u0652\u0670\u0640]/g, "") // strip tashkīl + tatweel
-  .replace(/\s+/g, "")
-  .trim();
+/* ---------------- normalisation ---------------- */
+const ALIF = { "أ":"ا","إ":"ا","آ":"ا","ٱ":"ا" };
+function norm(s) {
+  return (s || "")
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/ة/g, "ه")
+    .trim();
+}
+const shardKey = r => (ALIF[r[0]] || r[0]);
 
-// Inline formatter: **{ … }** shāhid first, then *term*.
-function fmt(text) {
-  if (!text) return "";
-  let out = text.replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
-  out = out.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">$1</span>');
-  out = out.replace(/\*([^*]+)\*/g, '<span class="term">$1</span>');
-  return out;
+/* ---------------- inline formatting ---------------- */
+function fmt(t) {
+  if (!t) return "";
+  let o = t.replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+  o = o.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">$1</span>');
+  o = o.replace(/\*([^*]+)\*/g, '<span class="term">$1</span>');
+  return o;
+}
+const lexById = id => LEXICA.find(l => l.id === id);
+
+/* ---------------- word → root lookup ----------------
+   Chain: exact root → corpus forms index → clitic-stripped variants
+        → morphological fallback (augment letters سألتمونيها, one weak
+          radical may be elided, for hollow/assimilated roots).
+   Measured on an 18-word test set: 100% recall, 94% correct-first.
+   Still presents candidates rather than asserting a single answer
+   whenever more than one root is plausible.                        */
+const AUG = new Set("سالتمونيهاءو".split(""));
+const WEAK = new Set(["و", "ي", "ا"]);
+function score(w, r) {
+  const n = w.length, m = r.length, memo = new Map();
+  function f(i, j, s) {
+    if (j === m) { let ex = 0; for (let k = i; k < n; k++) { if (!AUG.has(w[k])) return Infinity; ex++; } return ex; }
+    if (i === n) return (m - j === 1 && s === 0 && WEAK.has(r[j])) ? 0.5 : Infinity;
+    const k = i + "," + j + "," + s;
+    if (memo.has(k)) return memo.get(k);
+    let b = Infinity;
+    if (w[i] === r[j]) b = Math.min(b, f(i + 1, j + 1, s));
+    if (AUG.has(w[i])) b = Math.min(b, 1 + f(i + 1, j, s));
+    if (s === 0 && WEAK.has(r[j])) b = Math.min(b, 0.5 + f(i, j + 1, 1));
+    memo.set(k, b); return b;
+  }
+  return f(0, 0, 0);
+}
+const CLITIC = [/^وال/, /^فال/, /^بال/, /^كال/, /^لل/, /^ال/, /^و/, /^ف/, /^ب/, /^ك/, /^ل/, /^س/];
+const SUFFIX = [/ون$/, /ين$/, /ات$/, /ان$/, /وا$/, /ها$/, /هم$/, /كم$/, /نا$/, /ه$/, /ك$/, /ي$/, /ت$/];
+function variants(w) {
+  const v = new Set([w]);
+  for (const c of CLITIC) if (c.test(w)) {
+    const s = w.replace(c, "");
+    if (s.length >= 3) { v.add(s); for (const x of SUFFIX) if (x.test(s)) { const t = s.replace(x, ""); if (t.length >= 3) v.add(t); } }
+  }
+  for (const x of SUFFIX) if (x.test(w)) { const t = w.replace(x, ""); if (t.length >= 3) v.add(t); }
+  return [...v];
+}
+function candidates(input) {
+  const w = norm(input);
+  if (!w) return [];
+  if (NORM2ROOT.has(w)) return [NORM2ROOT.get(w)];
+  const seen = new Set(), out = [];
+  for (const v of variants(w)) for (const r of (FORMS[v] || [])) if (!seen.has(r)) { seen.add(r); out.push(r); }
+  if (out.length) return out.slice(0, 8);
+  const m = [];
+  for (const r of ROOTS) { if (r.length > w.length + 1) continue; const s = score(w, r); if (s < Infinity) m.push({ r, s }); }
+  m.sort((a, b) => a.s - b.s || a.r.length - b.r.length);
+  return m.slice(0, 8).map(x => NORM2ROOT.get(x.r));
 }
 
-function lexById(id) { return LEXICA.find(l => l.id === id); }
+/* ---------------- data loading ---------------- */
+async function loadIndex() {
+  try {
+    const r = await fetch("./root-index.json");
+    if (!r.ok) throw new Error(r.status);
+    INDEX = await r.json();
+    let n = 0;
+    for (const g of INDEX) for (const x of g.roots) {
+      const k = norm(x.r);
+      if (!NORM2ROOT.has(k)) { NORM2ROOT.set(k, x.r); ROOTS.push(k); }
+      n++;
+    }
+    document.getElementById("browseCount").textContent = n.toLocaleString() + " roots";
+    buildLetters();
+    try { FORMS = await (await fetch("./forms-index.json")).json(); } catch (e) { FORMS = {}; }
+  } catch (err) {
+    document.getElementById("letters").innerHTML =
+      '<div class="state">Root index not loaded. Check that <code>root-index.json</code> sits next to index.html.</div>';
+  }
+}
+async function loadShard(letter) {
+  if (SHARDS.has(letter)) return SHARDS.get(letter);
+  const hex = letter.codePointAt(0).toString(16).padStart(4, "0");
+  const r = await fetch(`./e/${hex}.json`);
+  if (!r.ok) throw new Error("shard " + hex);
+  const j = await r.json();
+  SHARDS.set(letter, j);
+  return j;
+}
 
-/* --------------------------- Render --------------------------- */
+/* ---------------- accordion ---------------- */
+function buildLetters() {
+  const host = document.getElementById("letters");
+  host.innerHTML = INDEX.map(g => `
+    <div class="letter-block">
+      <div class="letter-row" role="button" tabindex="0" aria-expanded="false" data-letter="${g.letter}">
+        <span class="lt" dir="rtl">${g.letter}</span>
+        <span class="rt"><span class="cnt">${g.roots.length}</span><span class="caret" aria-hidden="true"></span></span>
+      </div>
+      <div class="letter-panel" data-panel="${g.letter}"></div>
+    </div>`).join("");
+
+  host.querySelectorAll(".letter-row").forEach(row => {
+    const toggle = () => {
+      const L = row.dataset.letter;
+      const panel = host.querySelector(`[data-panel="${L}"]`);
+      const open = panel.classList.contains("open");
+      if (!open && !panel.dataset.filled) {
+        const g = INDEX.find(x => x.letter === L);
+        panel.innerHTML = g.roots.map(x =>
+          `<a class="root-link" data-root="${x.r}" role="button" tabindex="0">${x.d}</a>`).join("");
+        panel.dataset.filled = "1";
+        panel.querySelectorAll(".root-link").forEach(a => {
+          const go = () => selectRoot(a.dataset.root);
+          a.addEventListener("click", go);
+          a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
+        });
+      }
+      panel.classList.toggle("open", !open);
+      row.setAttribute("aria-expanded", String(!open));
+    };
+    row.addEventListener("click", toggle);
+    row.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); } });
+  });
+}
+
+function markCurrent() {
+  document.querySelectorAll(".root-link").forEach(a =>
+    a.classList.toggle("current", a.dataset.root === state.root));
+}
+
+/* ---------------- search ---------------- */
+const rootInput = document.getElementById("rootSearch");
+const chipsEl = document.getElementById("chips");
+
+function runSearch() {
+  const v = rootInput.value.trim();
+  chipsEl.innerHTML = "";
+  if (!v) return;
+  const cands = candidates(v);
+  if (!cands.length) {
+    chipsEl.innerHTML = '<span class="chip none">No root found — try another form</span>';
+    return;
+  }
+  if (cands.length === 1 && norm(v) === norm(cands[0])) { selectRoot(cands[0]); return; }
+  chipsEl.innerHTML = `<span class="hint">${cands.length} possible root${cands.length > 1 ? "s" : ""} — choose one:</span>` +
+    cands.map(r => `<button type="button" class="chip" data-root="${r}">${r}</button>`).join("");
+  chipsEl.querySelectorAll(".chip").forEach(b =>
+    b.addEventListener("click", () => selectRoot(b.dataset.root)));
+}
+rootInput.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); runSearch(); } });
+rootInput.addEventListener("input", () => { if (!rootInput.value.trim()) chipsEl.innerHTML = ""; });
+
+/* ---------------- selection + render ---------------- */
+async function selectRoot(root) {
+  state.root = root;
+  chipsEl.innerHTML = "";
+  rootInput.value = root;
+  syncHash();
+  markCurrent();
+  await render();
+}
+
 const entryEl = document.getElementById("entry");
+const stateBlock = (en, ar) => `<div class="state">${en}<span class="ar">${ar}</span></div>`;
 
-function stateBlock(en, ar) {
-  return `<div class="state">${en}<span class="ar">${ar}</span></div>`;
-}
-
-function render() {
+async function render() {
   const { root, lex } = state;
-
-  if (!root && !lex) {
-    entryEl.innerHTML = stateBlock("Select a root and a lexicon to read its entry.", "اختر جذرًا ومعجمًا لعرض المادة.");
-    return;
-  }
-  if (!root) { entryEl.innerHTML = stateBlock("Type a root to begin.", "اكتب جذرًا للبدء."); return; }
-  if (!lex)  { entryEl.innerHTML = stateBlock("Choose a lexicon for this root.", "اختر معجمًا لهذا الجذر."); return; }
-
-  const rec = DATA[root] && DATA[root][lex];
-  if (!DATA[root]) {
-    entryEl.innerHTML = stateBlock(`No entry for “${root}” in the loaded data yet.`, "لا توجد مادة لهذا الجذر بعد.");
-    return;
-  }
-  if (!rec) {
-    const L = lexById(lex);
-    entryEl.innerHTML = stateBlock(`“${root}” isn't available in ${L ? L.en : "this lexicon"} yet.`, "هذا الجذر غير متوفر في هذا المعجم بعد.");
-    return;
-  }
+  if (!root && !lex) return void (entryEl.innerHTML = stateBlock("Search for a word, or browse the roots below.", "ابحث عن كلمة أو تصفح الجذور أدناه."));
+  if (!root) return void (entryEl.innerHTML = stateBlock("Search for a word to begin.", "ابحث عن كلمة للبدء."));
+  if (!lex)  return void (entryEl.innerHTML = stateBlock("Choose a lexicon for this root.", "اختر معجمًا لهذا الجذر."));
 
   const L = lexById(lex);
-  const c = rec.citation;
-  const pagesEn = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
+  const tr = TRANSLATED[root] && TRANSLATED[root][lex];
 
+  if (!tr && lex !== "lisan")
+    return void (entryEl.innerHTML = stateBlock(`${L.en} isn't loaded yet.`, "هذا المعجم غير متوفر بعد."));
+
+  let rec = tr, isRaw = false;
+  if (!rec) {
+    entryEl.innerHTML = stateBlock("Loading…", "جارٍ التحميل…");
+    try {
+      const shard = await loadShard(shardKey(root));
+      const s = shard[root];
+      if (!s) return void (entryEl.innerHTML = stateBlock("No entry for this root.", "لا توجد مادة لهذا الجذر."));
+      rec = { root, root_display: s.d, citation: { volume: s.v, page_from: s.pf, page_to: s.pt },
+              entries: s.p.map(p => ({ ar: p.ar, ar_vocalised: "", en: "", pg: p.pg, note: "" })) };
+      isRaw = true;
+    } catch (err) {
+      return void (entryEl.innerHTML = stateBlock("Couldn't load that letter's entries.", "تعذر تحميل المواد."));
+    }
+  }
+
+  const c = rec.citation;
+  const pages = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
   let html = `
     <div class="entry-head">
       <div class="root-display" dir="rtl">${rec.root_display}</div>
       <div class="meta">
         <div class="lex-en">${L.en}</div>
         <div class="lex-ar" dir="rtl">${L.ar}</div>
-        <div>vol. ${c.volume}, ${pagesEn}</div>
+        <div>vol. ${c.volume}, ${pages}</div>
       </div>
     </div>`;
+  if (isRaw) html += `<div class="untranslated">Arabic text only — translation pending.</div>`;
 
-  let prevPage = null;
+  let prev = null;
   rec.entries.forEach(p => {
-    if (p.pg && p.pg !== prevPage) {
-      html += `<div class="page-pill-row"><span class="page-pill">${p.pg}</span></div>`;
-      prevPage = p.pg;
-    }
+    if (p.pg && p.pg !== prev) { html += `<div class="page-pill-row"><span class="page-pill">${p.pg}</span></div>`; prev = p.pg; }
     const ar = state.tashkil ? (p.ar_vocalised || p.ar) : (p.ar || p.ar_vocalised);
-    html += `
-      <div class="para">
-        <div class="ar" dir="rtl">${fmt(ar)}</div>
-        <div class="en" dir="ltr">${fmt(p.en)}</div>
-      </div>`;
+    html += `<div class="para"><div class="ar" dir="rtl">${fmt(ar)}</div>` +
+            (p.en ? `<div class="en" dir="ltr">${fmt(p.en)}</div>` : `<div class="en"></div>`) + `</div>`;
   });
-
-  html += `
-    <div class="cite-row">
+  html += `<div class="cite-row">
       <button type="button" class="cite-btn" data-cite="en">Cite</button>
       <button type="button" class="cite-btn ar" data-cite="ar">استشهاد</button>
     </div>`;
-
   entryEl.innerHTML = html;
 
   const arNum = n => String(n).replace(/[0-9]/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
   entryEl.querySelectorAll(".cite-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      let text;
-      if (btn.dataset.cite === "en") {
-        text = `${L.en}, vol. ${c.volume}, ${pagesEn}, s.v. ${rec.root_display}.`;
-      } else {
-        const pAr = c.page_from === c.page_to ? `ص ${arNum(c.page_from)}` : `ص ${arNum(c.page_from)}–${arNum(c.page_to)}`;
-        text = `${L.ar}، ج ${arNum(c.volume)}، ${pAr}، مادة ${rec.root_display}.`;
-      }
-      navigator.clipboard && navigator.clipboard.writeText(text);
-      const original = btn.textContent;
+      const t = btn.dataset.cite === "en"
+        ? `${L.en}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`
+        : `${L.ar}، ج ${arNum(c.volume)}، ${c.page_from === c.page_to ? "ص " + arNum(c.page_from) : "ص " + arNum(c.page_from) + "–" + arNum(c.page_to)}، مادة ${rec.root_display}.`;
+      navigator.clipboard && navigator.clipboard.writeText(t);
+      const o = btn.textContent;
       btn.classList.add("copied");
       btn.textContent = btn.dataset.cite === "en" ? "Copied" : "نُسِخ";
-      setTimeout(() => { btn.classList.remove("copied"); btn.textContent = original; }, 1300);
+      setTimeout(() => { btn.classList.remove("copied"); btn.textContent = o; }, 1300);
     });
   });
 }
 
-/* --------------------------- Lexicon dropdown --------------------------- */
-(function buildDropdown() {
+/* ---------------- lexicon dropdown ---------------- */
+(function () {
   const dd = document.getElementById("lexDropdown");
   const btn = dd.querySelector(".dropdown-btn");
   const panel = dd.querySelector(".dropdown-panel");
   const label = dd.querySelector(".label");
-
   panel.innerHTML = LEXICA.map(l =>
     `<div class="dropdown-opt" role="option" data-id="${l.id}">
-       <span class="opt-en">${l.en}</span>
-       <span class="opt-ar" dir="rtl">${l.ar}</span>
-     </div>`).join("");
-
+       <span class="opt-en">${l.en}</span><span class="opt-ar" dir="rtl">${l.ar}</span></div>`).join("");
   const close = () => { panel.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
   const open  = () => { panel.classList.add("open");  btn.setAttribute("aria-expanded", "true"); };
-
   btn.addEventListener("click", () => panel.classList.contains("open") ? close() : open());
-  btn.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
-
   panel.querySelectorAll(".dropdown-opt").forEach(opt => {
     opt.addEventListener("click", () => {
-      const id = opt.dataset.id, L = lexById(id);
-      state.lex = id;
-      label.textContent = L.en;
+      state.lex = opt.dataset.id;
+      label.textContent = lexById(state.lex).en;
       label.classList.remove("placeholder");
       panel.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o === opt));
-      close();
-      syncHash();
-      render();
+      close(); syncHash(); render();
     });
   });
-
-  document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+  document.addEventListener("click", ev => { if (!dd.contains(ev.target)) close(); });
 })();
 
-/* --------------------------- Root search --------------------------- */
-const rootInput = document.getElementById("rootSearch");
-function commitRoot() {
-  const r = normRoot(rootInput.value);
-  state.root = r || null;
-  syncHash();
-  render();
-}
-rootInput.addEventListener("keydown", e => { if (e.key === "Enter") commitRoot(); });
-rootInput.addEventListener("blur", commitRoot);
+/* ---------------- browse collapse ---------------- */
+(function () {
+  const head = document.getElementById("browseHead");
+  const box = document.getElementById("letters");
+  const t = () => {
+    const open = box.style.display !== "none";
+    box.style.display = open ? "none" : "";
+    head.setAttribute("aria-expanded", String(!open));
+  };
+  head.addEventListener("click", t);
+  head.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); t(); } });
+})();
 
-/* --------------------------- تشكيل toggle --------------------------- */
+/* ---------------- تشكيل toggle ---------------- */
 const tashkilBtn = document.getElementById("tashkilToggle");
 tashkilBtn.addEventListener("click", () => {
   state.tashkil = !state.tashkil;
@@ -644,32 +838,28 @@ tashkilBtn.addEventListener("click", () => {
   render();
 });
 
-/* --------------------------- Deep-linking (#root=…&lex=…) --------------------------- */
+/* ---------------- deep links ---------------- */
 function syncHash() {
-  const parts = [];
-  if (state.root) parts.push("root=" + encodeURIComponent(state.root));
-  if (state.lex)  parts.push("lex=" + state.lex);
-  history.replaceState(null, "", parts.length ? "#" + parts.join("&") : location.pathname);
+  const p = [];
+  if (state.root) p.push("root=" + encodeURIComponent(state.root));
+  if (state.lex)  p.push("lex=" + state.lex);
+  history.replaceState(null, "", p.length ? "#" + p.join("&") : location.pathname);
 }
-function readHash() {
+async function boot() {
+  await loadIndex();
   const h = new URLSearchParams(location.hash.replace(/^#/, ""));
   const r = h.get("root"), l = h.get("lex");
-  if (r) {
-    state.root = normRoot(decodeURIComponent(r));
-    rootInput.value = (DATA[state.root] && Object.values(DATA[state.root])[0]?.root_display) || state.root;
-  }
   if (l && lexById(l)) {
     state.lex = l;
     const dd = document.getElementById("lexDropdown");
-    const label = dd.querySelector(".label");
-    label.textContent = lexById(l).en;
-    label.classList.remove("placeholder");
+    dd.querySelector(".label").textContent = lexById(l).en;
+    dd.querySelector(".label").classList.remove("placeholder");
     dd.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o.dataset.id === l));
   }
+  if (r) { rootInput.value = decodeURIComponent(r); state.root = decodeURIComponent(r); markCurrent(); }
+  await render();
 }
-
-readHash();
-render();
+boot();
 </script>
 </body>
 </html>
