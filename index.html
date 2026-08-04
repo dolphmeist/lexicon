@@ -176,7 +176,7 @@
   .chip.none { border-color: var(--line); color: var(--ink-mute); cursor: default; font-family: var(--latin); font-size: 14px; }
 
   /* ---------- Root index accordion ---------- */
-  .browse { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .browse { margin-top: 18px; padding-top: 0; }
   .browse-head {
     display: flex; align-items: center; justify-content: space-between;
     cursor: pointer; user-select: none; padding-bottom: 4px;
@@ -201,6 +201,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-bottom: 14px;
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-radius: 4px;
@@ -499,14 +500,14 @@
   <!-- ===================== Command bar ===================== -->
   <div class="command">
     <div class="field">
-      <label for="rootSearch">Search <span class="ar">بحث</span></label>
+      <label for="rootSearch">Search</label>
       <input id="rootSearch" class="root-search" type="text" inputmode="text"
              placeholder="Paste any word — e.g. مكتوب" autocomplete="off" spellcheck="false" />
       <div class="chips" id="chips"></div>
     </div>
 
     <div class="field">
-      <label>Lexicon <span class="ar">المعجم</span></label>
+      <label>Lexicon</label>
       <div class="dropdown" id="lexDropdown">
         <button type="button" class="dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
           <span class="label placeholder">Choose a lexicon</span>
@@ -527,22 +528,19 @@
 
   <!-- ===================== Entry region ===================== -->
   <main id="entry" aria-live="polite">
-    <div class="state">
-      Select a root and a lexicon to read its entry.
-      <span class="ar">اختر جذرًا ومعجمًا لعرض المادة.</span>
-    </div>
+
   </main>
 
   <section class="browse">
     <div class="browse-head" id="browseHead" role="button" tabindex="0" aria-expanded="true">
-      <h2>Browse roots <span class="ar">تصفح الجذور</span></h2>
-      <span class="cnt" id="browseCount"></span>
+      <h2>Browse roots</h2>
+      
     </div>
     <div id="letters"></div>
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 4 — letter grid</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 5</span>
   </footer>
 
 </div>
@@ -664,7 +662,6 @@ async function loadIndex() {
       if (!NORM2ROOT.has(k)) { NORM2ROOT.set(k, x.r); ROOTS.push(k); }
       n++;
     }
-    document.getElementById("browseCount").textContent = n.toLocaleString() + " roots";
     buildLetters();
     try { FORMS = await (await fetch("./forms-index.json")).json(); } catch (e) { FORMS = {}; }
   } catch (err) {
@@ -768,8 +765,7 @@ const stateBlock = (en, ar) => `<div class="state">${en}<span class="ar">${ar}</
 
 async function render() {
   const { root, lex } = state;
-  if (!root && !lex) return void (entryEl.innerHTML = stateBlock("Search for a word, or browse the roots below.", "ابحث عن كلمة أو تصفح الجذور أدناه."));
-  if (!root) return void (entryEl.innerHTML = stateBlock("Search for a word to begin.", "ابحث عن كلمة للبدء."));
+  if (!root) return void (entryEl.innerHTML = "");
   if (!lex)  return void (entryEl.innerHTML = stateBlock("Choose a lexicon for this root.", "اختر معجمًا لهذا الجذر."));
 
   const L = lexById(lex);
