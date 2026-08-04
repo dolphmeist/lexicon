@@ -426,6 +426,16 @@
   }
   .para .en .shahid { color: var(--ink-soft); }
 
+  .para .note {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dotted var(--line);
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--ink-mute);
+    line-height: 1.55;
+  }
+
   /* Gold page pill between paragraphs */
   .page-pill-row { display: flex; justify-content: center; padding: 4px 0; }
   .page-pill {
@@ -540,7 +550,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 5</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 8</span>
   </footer>
 
 </div>
@@ -551,7 +561,7 @@
    Data files expected alongside index.html:
      root-index.json      — all 9,119 Lisān roots, grouped by letter
      e/XXXX.json          — per-letter entry shards (XXXX = hex codepoint)
-   TRANSLATED holds your edited/translated records, schema:
+   Translations are loaded per root from t/<lexicon>/<root>.json, schema:
      { lexicon, root, root_display, forms:[…],
        citation:{volume,page_from,page_to},
        entries:[ { ar, ar_vocalised, en, pg, note } ] }
@@ -567,8 +577,28 @@ const LEXICA = [
   { id: "mufradat", en: "Mufradāt al-Rāghib al-Iṣfahānī", ar: "مفردات الراغب" }
 ];
 
-/* Your translated records go here: TRANSLATED["كتب"]["lisan"] = {…} */
-const TRANSLATED = {};
+/* Translations live one file per root per lexicon:
+       t/<lexicon>/<root>.json     e.g. t/mufradat/صدق.json
+   Schema: { lexicon, root, root_display, forms, citation, entries[] }
+   A missing file simply means "not translated yet" — the Arabic still shows. */
+const TRANS = new Map();          // "lex:root" -> record | null
+async function loadTranslation(root, lex) {
+  const key = lex + ":" + root;
+  if (TRANS.has(key)) return TRANS.get(key);
+  // Try composed (NFC) then decomposed (NFD) filenames — macOS writes NFD,
+  // browsers request NFC, and the two are different bytes for the same name.
+  const names = [root.normalize("NFC"), root.normalize("NFD")]
+    .filter((v, i, a) => a.indexOf(v) === i);
+  let rec = null;
+  for (const n of names) {
+    try {
+      const r = await fetch(`./t/${lex}/${encodeURIComponent(n)}.json`);
+      if (r.ok) { rec = await r.json(); break; }
+    } catch (e) { /* try next */ }
+  }
+  TRANS.set(key, rec);
+  return rec;
+}
 
 let state = { root: null, lex: null, tashkil: false };
 let INDEX = [];              // [{letter, roots:[{r,d}]}]
@@ -769,7 +799,7 @@ async function render() {
   if (!lex)  return void (entryEl.innerHTML = stateBlock("Choose a lexicon for this root.", "اختر معجمًا لهذا الجذر."));
 
   const L = lexById(lex);
-  const tr = TRANSLATED[root] && TRANSLATED[root][lex];
+  const tr = await loadTranslation(root, lex);
 
   if (!tr && !SHARD_DIR[lex])
     return void (entryEl.innerHTML = stateBlock(`${L.en} isn't loaded yet.`, "هذا المعجم غير متوفر بعد."));
@@ -807,7 +837,7 @@ async function render() {
     if (p.pg && p.pg !== prev) { html += `<div class="page-pill-row"><span class="page-pill">${p.pg}</span></div>`; prev = p.pg; }
     const ar = state.tashkil ? (p.ar_vocalised || p.ar) : (p.ar || p.ar_vocalised);
     html += `<div class="para"><div class="ar" dir="rtl">${fmt(ar)}</div>` +
-            (p.en ? `<div class="en" dir="ltr">${fmt(p.en)}</div>` : `<div class="en"></div>`) + `</div>`;
+            (p.en ? `<div class="en" dir="ltr">${fmt(p.en)}${p.note ? `<div class="note">${p.note}</div>` : ""}</div>` : `<div class="en"></div>`) + `</div>`;
   });
   html += `<div class="cite-row">
       <button type="button" class="cite-btn" data-cite="en">Cite</button>
