@@ -510,7 +510,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 2 — merged paragraphs</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 3 — Lisān + Mufradāt</span>
   </footer>
 
 </div>
@@ -640,13 +640,17 @@ async function loadIndex() {
       '<div class="state">Root index not loaded. Check that <code>root-index.json</code> sits next to index.html.</div>';
   }
 }
-async function loadShard(letter) {
-  if (SHARDS.has(letter)) return SHARDS.get(letter);
+const SHARD_DIR = { lisan: "e", mufradat: "m" };   // lexicon id -> folder
+async function loadShard(letter, lex) {
+  const dir = SHARD_DIR[lex];
+  if (!dir) throw new Error("no data for " + lex);
+  const key = lex + ":" + letter;
+  if (SHARDS.has(key)) return SHARDS.get(key);
   const hex = letter.codePointAt(0).toString(16).padStart(4, "0");
-  const r = await fetch(`./e/${hex}.json`);
+  const r = await fetch(`./${dir}/${hex}.json`);
   if (!r.ok) throw new Error("shard " + hex);
   const j = await r.json();
-  SHARDS.set(letter, j);
+  SHARDS.set(key, j);
   return j;
 }
 
@@ -735,14 +739,14 @@ async function render() {
   const L = lexById(lex);
   const tr = TRANSLATED[root] && TRANSLATED[root][lex];
 
-  if (!tr && lex !== "lisan")
+  if (!tr && !SHARD_DIR[lex])
     return void (entryEl.innerHTML = stateBlock(`${L.en} isn't loaded yet.`, "هذا المعجم غير متوفر بعد."));
 
   let rec = tr, isRaw = false;
   if (!rec) {
     entryEl.innerHTML = stateBlock("Loading…", "جارٍ التحميل…");
     try {
-      const shard = await loadShard(shardKey(root));
+      const shard = await loadShard(shardKey(root), lex);
       const s = shard[root];
       if (!s) return void (entryEl.innerHTML = stateBlock("No entry for this root.", "لا توجد مادة لهذا الجذر."));
       rec = { root, root_display: s.d, citation: { volume: s.v, page_from: s.pf, page_to: s.pt },
