@@ -186,28 +186,60 @@
     letter-spacing: .14em; text-transform: uppercase; color: var(--ink-mute); font-weight: 400;
   }
   .browse-head h2 .ar { font-family: var(--arabic); font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--gold); }
-  .letter-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px;
-    margin-top: 6px;
+  .letter-grid {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 8px;
+    direction: rtl;
+    margin-top: 10px;
+  }
+  @media (max-width: 900px) { .letter-grid { grid-template-columns: repeat(10, 1fr); } }
+  @media (max-width: 620px) { .letter-grid { grid-template-columns: repeat(7, 1fr); } }
+  .letter-tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-radius: 4px;
     cursor: pointer;
-    transition: border-color .15s, background .15s;
+    transition: border-color .15s, background .15s, transform .1s;
+    user-select: none;
   }
-  .letter-row:hover { border-color: var(--gold); }
-  .letter-row[aria-expanded="true"] { border-color: var(--gold); background: #fff; }
-  .letter-row[aria-expanded="true"] .caret { transform: rotate(180deg); }
-  .letter-row .lt { font-family: var(--quran); font-size: 26px; color: var(--ink); direction: rtl; line-height: 1; }
-  .letter-row .rt { display: flex; align-items: center; gap: 12px; }
-  .letter-row .cnt { font-family: var(--latin); font-size: 13px; color: var(--ink-mute); }
+  .letter-tile:hover { border-color: var(--gold); }
+  .letter-tile:focus-visible { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+  .letter-tile[aria-selected="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .letter-tile .lt {
+    font-family: var(--quran);
+    font-size: 24px;
+    line-height: 1;
+    color: var(--ink);
+    direction: rtl;
+  }
+  .letter-tile[aria-selected="true"] .lt { color: var(--paper); }
+  .letter-tile .cnt {
+    position: absolute;
+    bottom: 3px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--latin);
+    font-size: 9.5px;
+    color: var(--ink-mute);
+    letter-spacing: .02em;
+  }
+  .letter-tile[aria-selected="true"] .cnt { color: var(--gold-soft); }
+
   .letter-panel {
     display: none;
-    padding: 14px 16px 16px;
+    margin-top: 10px;
+    padding: 16px 18px;
     border: 1px solid var(--gold);
-    border-top: 0;
-    border-radius: 0 0 4px 4px;
+    border-radius: 4px;
     background: #fff;
     direction: rtl;
     text-align: right;
@@ -510,7 +542,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 3 — Lisān + Mufradāt</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 4 — letter grid</span>
   </footer>
 
 </div>
@@ -657,36 +689,40 @@ async function loadShard(letter, lex) {
 /* ---------------- accordion ---------------- */
 function buildLetters() {
   const host = document.getElementById("letters");
-  host.innerHTML = INDEX.map(g => `
-    <div class="letter-block">
-      <div class="letter-row" role="button" tabindex="0" aria-expanded="false" data-letter="${g.letter}">
-        <span class="lt" dir="rtl">${g.letter}</span>
-        <span class="rt"><span class="cnt">${g.roots.length}</span><span class="caret" aria-hidden="true"></span></span>
-      </div>
-      <div class="letter-panel" data-panel="${g.letter}"></div>
-    </div>`).join("");
+  host.innerHTML =
+    '<div class="letter-grid" id="letterGrid">' +
+    INDEX.map(g =>
+      `<div class="letter-tile" role="button" tabindex="0" aria-selected="false" data-letter="${g.letter}">
+         <span class="lt">${g.letter}</span><span class="cnt">${g.roots.length}</span>
+       </div>`).join("") +
+    '</div><div class="letter-panel" id="letterPanel"></div>';
 
-  host.querySelectorAll(".letter-row").forEach(row => {
-    const toggle = () => {
-      const L = row.dataset.letter;
-      const panel = host.querySelector(`[data-panel="${L}"]`);
-      const open = panel.classList.contains("open");
-      if (!open && !panel.dataset.filled) {
-        const g = INDEX.find(x => x.letter === L);
-        panel.innerHTML = g.roots.map(x =>
-          `<a class="root-link" data-root="${x.r}" role="button" tabindex="0">${x.d}</a>`).join("");
-        panel.dataset.filled = "1";
-        panel.querySelectorAll(".root-link").forEach(a => {
-          const go = () => selectRoot(a.dataset.root);
-          a.addEventListener("click", go);
-          a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
-        });
-      }
-      panel.classList.toggle("open", !open);
-      row.setAttribute("aria-expanded", String(!open));
-    };
-    row.addEventListener("click", toggle);
-    row.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); } });
+  const grid = document.getElementById("letterGrid");
+  const panel = document.getElementById("letterPanel");
+
+  function openLetter(tile) {
+    const L = tile.dataset.letter;
+    const wasOpen = tile.getAttribute("aria-selected") === "true";
+    grid.querySelectorAll(".letter-tile").forEach(t => t.setAttribute("aria-selected", "false"));
+    if (wasOpen) { panel.classList.remove("open"); panel.innerHTML = ""; return; }
+    tile.setAttribute("aria-selected", "true");
+    const g = INDEX.find(x => x.letter === L);
+    panel.innerHTML = g.roots.map(x =>
+      `<a class="root-link" data-root="${x.r}" role="button" tabindex="0">${x.d}</a>`).join("");
+    panel.classList.add("open");
+    panel.querySelectorAll(".root-link").forEach(a => {
+      const go = () => selectRoot(a.dataset.root);
+      a.addEventListener("click", go);
+      a.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
+    });
+    markCurrent();
+  }
+
+  grid.querySelectorAll(".letter-tile").forEach(tile => {
+    tile.addEventListener("click", () => openLetter(tile));
+    tile.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openLetter(tile); }
+    });
   });
 }
 
