@@ -326,7 +326,7 @@
   }
   .dropdown-opt:last-child { border-bottom: 0; }
   .dropdown-opt:hover, .dropdown-opt.active { background: var(--paper-2); }
-  .dropdown-opt .opt-en { font-family: var(--latin); font-size: 16px; }
+  .dropdown-opt .opt-en { font-family: var(--latin); font-size: 16px; white-space: nowrap; }
   .dropdown-opt .opt-en .au { color: var(--ink-mute); font-size: 14.5px; }
   .dropdown-btn .label .au { color: var(--ink-mute); font-size: 14.5px; }
   .dropdown-opt .opt-ar { font-family: var(--arabic); font-size: 19px; color: var(--ink-soft); direction: rtl; }
@@ -583,7 +583,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 16</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 17</span>
   </footer>
 
 </div>
@@ -613,7 +613,8 @@ const LEXICA = [
            edn: "3rd edn", arEdn: "الطبعة الثالثة",
            year: "1414 AH", arYear: "١٤١٤هـ", vols: 15 } },
   { id: "mufradat",
-    book: "al-Mufradāt fī Gharīb al-Qur'ān", author: "al-Rāghib al-Iṣfahānī", died: "502 / 1108",
+    book: "al-Mufradāt", bookFull: "al-Mufradāt fī Gharīb al-Qur'ān",
+    author: "al-Rāghib al-Iṣfahānī", died: "502 / 1108",
     ar: "المفردات في غريب القرآن", arAuthor: "الراغب الأصفهاني",
     bib: { authorFull: "al-Rāghib al-Iṣfahānī, Abū al-Qāsim al-Ḥusayn ibn Muḥammad",
            arAuthorFull: "الراغب الأصفهاني، أبو القاسم الحسين بن محمد",
@@ -891,7 +892,7 @@ async function render() {
     if (!b) return `${L.book}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`;
     const ed = b.editor ? `, ed. ${b.editor}` : "";
     const vol = b.vols > 1 ? `vol. ${c.volume}, ` : "";
-    return `${b.authorFull}, ${L.book}${ed} (${b.place}: ${b.publisher}, ${b.edn}, ${b.year}), ${vol}${pages}, s.v. ${rec.root_display}.`;
+    return `${b.authorFull}, ${L.bookFull || L.book}${ed} (${b.place}: ${b.publisher}, ${b.edn}, ${b.year}), ${vol}${pages}, s.v. ${rec.root_display}.`;
   }
   function citeAr() {
     const pAr = c.page_from === c.page_to ? `ص ${arNum(c.page_from)}` : `ص ${arNum(c.page_from)}–${arNum(c.page_to)}`;
