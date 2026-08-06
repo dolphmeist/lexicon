@@ -453,6 +453,10 @@
   /* cited word or phrase — italic only */
   .para em, .para .term { font-style: italic; color: inherit; }
   .para .ar .term { font-style: normal; color: inherit; }
+  /* quoted verse — coloured, italic, not bold */
+  .verse { font-style: italic; }
+  .para .en .verse { color: var(--ink-soft); }
+  .para .ar .verse { color: var(--gold); }
   /* a word the author is introducing and defining under this root */
   .headword { font-weight: 700; }
   .para .en .headword { font-style: italic; color: var(--ink-soft); }
@@ -576,7 +580,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 12</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 14</span>
   </footer>
 
 </div>
@@ -622,6 +626,7 @@ function fmt(t) {
   let o = t.replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
   o = o.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">{$1}</span>');
   o = o.replace(/\*\*([^*{}]+)\*\*/g, '<span class="headword">$1</span>');
+  o = o.replace(/_([^_]+)_/g, '<span class="verse">$1</span>');
   o = o.replace(/\*([^*]+)\*/g, '<span class="term">$1</span>');
   return o;
 }
@@ -827,6 +832,7 @@ async function render() {
   const c = rec.citation;
   const pages = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
   const translated = rec.entries.some(e => e.en);
+  const hasVocalised = rec.entries.some(e => e.ar_vocalised);
 
   let html = `<div class="entry-card">
     <div class="entry-head">
@@ -835,7 +841,7 @@ async function render() {
     </div>
     <div class="tool-row">
       <div class="left">
-        <button type="button" class="pill-btn ar" id="tashkilToggle" aria-pressed="${state.tashkil}">تَشْكِيل</button>
+        ${hasVocalised ? `<button type="button" class="pill-btn ar" id="tashkilToggle" aria-pressed="${state.tashkil}">تَشْكِيل</button>` : ""}
         <button type="button" class="pill-btn ar" data-cite="ar">استشهاد</button>
       </div>
       <button type="button" class="pill-btn" data-cite="en">Cite</button>
