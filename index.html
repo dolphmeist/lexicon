@@ -117,7 +117,7 @@
   /* -------------------- Command bar -------------------- */
   .command {
     display: grid;
-    grid-template-columns: 0.85fr 1fr auto;
+    grid-template-columns: 0.85fr 1fr;
     align-items: start;
     gap: 18px;
     margin-bottom: 26px;
@@ -361,33 +361,68 @@
   .tashkil-toggle[aria-pressed="true"] .dot { background: var(--gold); }
 
   /* -------------------- Entry region -------------------- */
+  /* Framed entry card */
+  .entry-card {
+    background: #fffdf7;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 30px 32px;
+    margin-top: 4px;
+    box-shadow: 0 1px 3px rgba(27,36,71,.04);
+  }
+
   .entry-head {
-    border-top: 2px solid var(--gold);
-    border-bottom: 1px solid var(--line);
-    padding: 20px 0 16px;
-    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 34px;
+    align-items: end;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--gold);
+  }
+  @media (max-width: 680px) { .entry-head { grid-template-columns: 1fr; gap: 6px; } }
+  .entry-head .side-ar { direction: rtl; text-align: right; }
+  .entry-head .side-en { direction: ltr; text-align: left; }
+  .entry-head .root-ar {
+    font-family: var(--quran);
+    font-size: 38px;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .entry-head .root-en {
+    font-family: var(--latin);
+    font-size: 26px;
+    letter-spacing: .04em;
+    color: var(--ink);
+  }
+
+  /* Toolbar inside the card */
+  .tool-row {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 12px;
+    padding: 16px 0 4px;
     flex-wrap: wrap;
   }
-  .entry-head .root-display {
-    font-family: var(--quran);
-    font-size: 44px;
-    letter-spacing: .12em;
-    direction: rtl;
-    color: var(--ink);
-    line-height: 1;
-  }
-  .entry-head .meta {
-    text-align: right;
-    color: var(--ink-mute);
+  .tool-row .left { display: flex; gap: 10px; align-items: center; }
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 15px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--latin);
     font-size: 14px;
-    line-height: 1.5;
+    color: var(--ink);
+    transition: background .15s, color .15s;
   }
-  .entry-head .meta .lex-en { color: var(--ink); font-size: 16px; }
-  .entry-head .meta .lex-ar { font-family: var(--arabic); font-size: 18px; color: var(--ink-soft); }
+  .pill-btn.ar { font-family: var(--arabic); font-size: 17px; }
+  .pill-btn:hover { background: var(--gold-soft); }
+  .pill-btn.copied { background: var(--gold); border-color: var(--gold); }
+  .pill-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
   /* Bilingual two-column paragraph rows */
   .para {
@@ -433,39 +468,37 @@
     line-height: 1.55;
   }
 
-  /* Gold page pill between paragraphs */
-  .page-pill-row { display: flex; justify-content: center; padding: 4px 0; }
+  /* Page divider: rule across, pill centred */
+  .page-pill-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 0 10px;
+  }
+  .page-pill-row::before,
+  .page-pill-row::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+  }
+  .page-pill-row::before {
+    background: linear-gradient(to right, transparent 0%, var(--gold-soft) 18%, var(--gold-soft) 100%);
+  }
+  .page-pill-row::after {
+    background: linear-gradient(to left, transparent 0%, var(--gold-soft) 18%, var(--gold-soft) 100%);
+  }
   .page-pill {
+    flex: none;
+    margin: 0 14px;
     font-family: var(--latin);
     font-size: 12.5px;
     letter-spacing: .06em;
-    color: var(--ink);
-    background: var(--gold-soft);
+    color: var(--gold);
+    background: #fffdf7;
     border: 1px solid var(--gold);
     border-radius: 20px;
-    padding: 2px 12px;
+    padding: 3px 14px;
     direction: ltr;
   }
-
-  /* Cite buttons */
-  .cite-row { display: flex; gap: 10px; padding: 18px 0 4px; flex-wrap: wrap; }
-  .cite-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 16px;
-    background: var(--ink);
-    color: var(--paper);
-    border: 1px solid var(--ink);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: var(--latin);
-    font-size: 15px;
-    transition: background .15s, color .15s;
-  }
-  .cite-btn.ar { font-family: var(--arabic); font-size: 18px; }
-  .cite-btn:hover { background: var(--ink-soft); }
-  .cite-btn.copied { background: var(--gold); border-color: var(--gold); color: var(--ink); }
 
   /* Empty / loading states */
   .state {
@@ -523,14 +556,6 @@
         <div class="dropdown-panel" role="listbox" aria-label="Lexicon"></div>
       </div>
     </div>
-
-    <div class="field tashkil-field">
-      <label aria-hidden="true">&nbsp;</label>
-      <button type="button" class="tashkil-toggle" id="tashkilToggle" aria-pressed="false">
-        <span class="dot" aria-hidden="true"></span>
-        تَشْكِيل
-      </button>
-    </div>
   </div>
 
   <!-- ===================== Entry region ===================== -->
@@ -547,7 +572,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 10</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 11</span>
   </footer>
 
 </div>
@@ -596,6 +621,19 @@ function fmt(t) {
   return o;
 }
 const lexById = id => LEXICA.find(l => l.id === id);
+
+/* Root transliteration — project rules: ḳ = ḳāʾ (خ), q = qāf, ḍ = ḍād,
+   ḋ = ẓāʾ, ʿ curved ʿayn, ġ = ġayn, hamza = straight apostrophe. */
+const TR = { "ا":"a","ب":"b","ت":"t","ث":"th","ج":"j","ح":"ḥ","خ":"ḳ","د":"d","ذ":"dh",
+  "ر":"r","ز":"z","س":"s","ش":"sh","ص":"ṣ","ض":"ḍ","ط":"ṭ","ظ":"ḋ","ع":"ʿ","غ":"ġ",
+  "ف":"f","ق":"q","ك":"k","ل":"l","م":"m","ن":"n","ه":"h","و":"w","ي":"y",
+  "ء":"'","أ":"'","إ":"'","آ":"'","ؤ":"'","ئ":"'","ة":"a","ى":"ā" };
+function translitRoot(r) {
+  return Array.from(r.replace(/[\u064B-\u0652\u0670\u0640\s]/g, ""))
+    .map(c => TR[c] || c).join("-");
+}
+
+
 
 /* ---------------- word -> root lookup ----------------
    exact root -> corpus forms index -> clitic-stripped variants
@@ -785,14 +823,17 @@ async function render() {
   const pages = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
   const translated = rec.entries.some(e => e.en);
 
-  let html = `
+  let html = `<div class="entry-card">
     <div class="entry-head">
-      <div class="root-display" dir="rtl">${rec.root_display}</div>
-      <div class="meta">
-        <div class="lex-en">${L.en}</div>
-        <div class="lex-ar" dir="rtl">${L.ar}</div>
-        <div>vol. ${c.volume}, ${pages}</div>
+      <div class="side-ar"><span class="root-ar">${rec.root_display}</span></div>
+      <div class="side-en"><span class="root-en">${translitRoot(rec.root)}</span></div>
+    </div>
+    <div class="tool-row">
+      <div class="left">
+        <button type="button" class="pill-btn ar" id="tashkilToggle" aria-pressed="${state.tashkil}">تَشْكِيل</button>
+        <button type="button" class="pill-btn ar" data-cite="ar">استشهاد</button>
       </div>
+      <button type="button" class="pill-btn" data-cite="en">Cite</button>
     </div>`;
   if (!translated) html += `<div class="untranslated">Arabic text only — translation pending.</div>`;
 
@@ -804,14 +845,11 @@ async function render() {
             (p.en ? `<div class="en" dir="ltr">${fmt(p.en)}${p.note ? `<div class="note">${p.note}</div>` : ""}</div>`
                   : `<div class="en"></div>`) + `</div>`;
   });
-  html += `<div class="cite-row">
-      <button type="button" class="cite-btn" data-cite="en">Cite</button>
-      <button type="button" class="cite-btn ar" data-cite="ar">استشهاد</button>
-    </div>`;
+  html += `</div>`;
   entryEl.innerHTML = html;
 
   const arNum = n => String(n).replace(/[0-9]/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
-  entryEl.querySelectorAll(".cite-btn").forEach(btn => {
+  entryEl.querySelectorAll("[data-cite]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = btn.dataset.cite === "en"
         ? `${L.en}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`
@@ -822,6 +860,11 @@ async function render() {
       btn.textContent = btn.dataset.cite === "en" ? "Copied" : "نُسِخ";
       setTimeout(() => { btn.classList.remove("copied"); btn.textContent = o; }, 1300);
     });
+  });
+  const tb = entryEl.querySelector("#tashkilToggle");
+  if (tb) tb.addEventListener("click", () => {
+    state.tashkil = !state.tashkil;
+    render();
   });
 }
 
@@ -861,14 +904,6 @@ async function render() {
   head.addEventListener("click", t);
   head.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); t(); } });
 })();
-
-/* ---------------- تشكيل toggle ---------------- */
-const tashkilBtn = document.getElementById("tashkilToggle");
-tashkilBtn.addEventListener("click", () => {
-  state.tashkil = !state.tashkil;
-  tashkilBtn.setAttribute("aria-pressed", String(state.tashkil));
-  render();
-});
 
 /* ---------------- deep links ---------------- */
 function syncHash() {
