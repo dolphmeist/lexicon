@@ -327,6 +327,10 @@
   .dropdown-opt:last-child { border-bottom: 0; }
   .dropdown-opt:hover, .dropdown-opt.active { background: var(--paper-2); }
   .dropdown-opt .opt-en { font-family: var(--latin); font-size: 16px; }
+  .dropdown-opt .opt-en .bk { font-style: italic; }
+  .dropdown-opt .opt-en .au { color: var(--ink-mute); font-size: 14.5px; }
+  .dropdown-btn .label .bk { font-style: italic; }
+  .dropdown-btn .label .au { color: var(--ink-mute); font-size: 14.5px; }
   .dropdown-opt .opt-ar { font-family: var(--arabic); font-size: 19px; color: var(--ink-soft); direction: rtl; }
 
   /* -------------------- تشكيل toggle (inline in command bar) -------------------- */
@@ -429,6 +433,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 34px;
+    align-items: center;
     padding: 14px 0 16px;
   }
   @media (max-width: 680px) { .para { grid-template-columns: 1fr; gap: 14px; } }
@@ -580,7 +585,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 14</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 15</span>
   </footer>
 
 </div>
@@ -599,13 +604,36 @@
    ===================================================================== */
 
 const LEXICA = [
-  { id: "lisan",    en: "Lisān al-ʿArab",                 ar: "لسان العرب" },
-  { id: "taj",      en: "Tāj al-ʿArūs",                   ar: "تاج العروس" },
-  { id: "qamus",    en: "al-Qāmūs al-Muḥīṭ",              ar: "القاموس المحيط" },
-  { id: "maqayis",  en: "Maqāyīs al-Lugha",               ar: "مقاييس اللغة" },
-  { id: "sihah",    en: "al-Ṣiḥāḥ (al-Jawharī)",          ar: "الصحاح" },
-  { id: "mufradat", en: "Mufradāt al-Rāghib al-Iṣfahānī", ar: "مفردات الراغب" }
+  { id: "lisan",
+    book: "Lisān al-ʿArab", author: "Ibn Manẓūr", died: "711 / 1311",
+    ar: "لسان العرب", arAuthor: "ابن منظور",
+    bib: { authorFull: "Ibn Manẓūr, Muḥammad ibn Mukarram",
+           arAuthorFull: "ابن منظور، محمد بن مكرم",
+           editor: "", arEditor: "",
+           place: "Beirut", arPlace: "بيروت",
+           publisher: "Dār Ṣādir", arPublisher: "دار صادر",
+           edn: "3rd edn", arEdn: "الطبعة الثالثة",
+           year: "1414 AH", arYear: "١٤١٤هـ", vols: 15 } },
+  { id: "mufradat",
+    book: "al-Mufradāt fī Gharīb al-Qur'ān", author: "al-Rāghib al-Iṣfahānī", died: "502 / 1108",
+    ar: "المفردات في غريب القرآن", arAuthor: "الراغب الأصفهاني",
+    bib: { authorFull: "al-Rāghib al-Iṣfahānī, Abū al-Qāsim al-Ḥusayn ibn Muḥammad",
+           arAuthorFull: "الراغب الأصفهاني، أبو القاسم الحسين بن محمد",
+           editor: "Ṣafwān ʿAdnān al-Dāwūdī", arEditor: "صفوان عدنان الداودي",
+           place: "Damascus and Beirut", arPlace: "دمشق وبيروت",
+           publisher: "Dār al-Qalam / al-Dār al-Shāmiyya", arPublisher: "دار القلم والدار الشامية",
+           edn: "1st edn", arEdn: "الطبعة الأولى",
+           year: "1412 AH", arYear: "١٤١٢هـ", vols: 1 } },
+  { id: "taj",     book: "Tāj al-ʿArūs", author: "al-Zabīdī", died: "1205 / 1791",
+    ar: "تاج العروس", arAuthor: "الزبيدي" },
+  { id: "qamus",   book: "al-Qāmūs al-Muḥīṭ", author: "al-Fīrūzābādī", died: "817 / 1415",
+    ar: "القاموس المحيط", arAuthor: "الفيروزآبادي" },
+  { id: "maqayis", book: "Maqāyīs al-Lugha", author: "Ibn Fāris", died: "395 / 1004",
+    ar: "مقاييس اللغة", arAuthor: "ابن فارس" },
+  { id: "sihah",   book: "al-Ṣiḥāḥ", author: "al-Jawharī", died: "393 / 1003",
+    ar: "الصحاح", arAuthor: "الجوهري" }
 ];
+const lexLabel = l => `<span class="bk">${l.book}</span> <span class="au">(${l.author} d. ${l.died})</span>`;
 
 
 /* ---------------- normalisation & formatting ---------------- */
@@ -827,7 +855,7 @@ async function render() {
 
   const rec = await loadEntry(root, lex);
   if (!rec) return void (entryEl.innerHTML =
-    stateBlock(`${L.en} has no entry for this root.`, "لا توجد مادة لهذا الجذر في هذا المعجم."));
+    stateBlock(`${L.book} has no entry for this root.`, "لا توجد مادة لهذا الجذر في هذا المعجم."));
 
   const c = rec.citation;
   const pages = c.page_from === c.page_to ? `p. ${c.page_from}` : `pp. ${c.page_from}–${c.page_to}`;
@@ -860,11 +888,23 @@ async function render() {
   entryEl.innerHTML = html;
 
   const arNum = n => String(n).replace(/[0-9]/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+  const b = L.bib;
+  function citeEn() {
+    if (!b) return `${L.book}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`;
+    const ed = b.editor ? `, ed. ${b.editor}` : "";
+    const vol = b.vols > 1 ? `vol. ${c.volume}, ` : "";
+    return `${b.authorFull}, ${L.book}${ed} (${b.place}: ${b.publisher}, ${b.edn}, ${b.year}), ${vol}${pages}, s.v. ${rec.root_display}.`;
+  }
+  function citeAr() {
+    const pAr = c.page_from === c.page_to ? `ص ${arNum(c.page_from)}` : `ص ${arNum(c.page_from)}–${arNum(c.page_to)}`;
+    if (!b) return `${L.ar}، ج ${arNum(c.volume)}، ${pAr}، مادة ${rec.root_display}.`;
+    const ed = b.arEditor ? `، تحقيق ${b.arEditor}` : "";
+    const vol = b.vols > 1 ? `ج ${arNum(c.volume)}، ` : "";
+    return `${b.arAuthorFull}، ${L.ar}${ed}، ${b.arPlace}: ${b.arPublisher}، ${b.arEdn}، ${b.arYear}، ${vol}${pAr}، مادة ${rec.root_display}.`;
+  }
   entryEl.querySelectorAll("[data-cite]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const t = btn.dataset.cite === "en"
-        ? `${L.en}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`
-        : `${L.ar}، ج ${arNum(c.volume)}، ${c.page_from === c.page_to ? "ص " + arNum(c.page_from) : "ص " + arNum(c.page_from) + "–" + arNum(c.page_to)}، مادة ${rec.root_display}.`;
+      const t = btn.dataset.cite === "en" ? citeEn() : citeAr();
       navigator.clipboard && navigator.clipboard.writeText(t);
       const o = btn.textContent;
       btn.classList.add("copied");
@@ -887,14 +927,14 @@ async function render() {
   const label = dd.querySelector(".label");
   panel.innerHTML = LEXICA.map(l =>
     `<div class="dropdown-opt" role="option" data-id="${l.id}">
-       <span class="opt-en">${l.en}</span><span class="opt-ar" dir="rtl">${l.ar}</span></div>`).join("");
+       <span class="opt-en">${lexLabel(l)}</span><span class="opt-ar" dir="rtl">${l.ar}</span></div>`).join("");
   const close = () => { panel.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
   const open  = () => { panel.classList.add("open");  btn.setAttribute("aria-expanded", "true"); };
   btn.addEventListener("click", () => panel.classList.contains("open") ? close() : open());
   panel.querySelectorAll(".dropdown-opt").forEach(opt => {
     opt.addEventListener("click", () => {
       state.lex = opt.dataset.id;
-      label.textContent = lexById(state.lex).en;
+      label.innerHTML = lexLabel(lexById(state.lex));
       label.classList.remove("placeholder");
       panel.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o === opt));
       close(); syncHash(); render();
@@ -930,7 +970,7 @@ async function boot() {
   if (l && lexById(l)) {
     state.lex = l;
     const dd = document.getElementById("lexDropdown");
-    dd.querySelector(".label").textContent = lexById(l).en;
+    dd.querySelector(".label").innerHTML = lexLabel(lexById(l));
     dd.querySelector(".label").classList.remove("placeholder");
     dd.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o.dataset.id === l));
   }
@@ -954,7 +994,7 @@ async function applyHash() {
   if (l && lexById(l)) {
     state.lex = l;
     const dd = document.getElementById("lexDropdown");
-    dd.querySelector(".label").textContent = lexById(l).en;
+    dd.querySelector(".label").innerHTML = lexLabel(lexById(l));
     dd.querySelector(".label").classList.remove("placeholder");
     dd.querySelectorAll(".dropdown-opt").forEach(o => o.classList.toggle("active", o.dataset.id === l));
   }
