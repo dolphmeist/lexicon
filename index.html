@@ -429,8 +429,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 34px;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--paper-2);
+    padding: 14px 0 16px;
   }
   @media (max-width: 680px) { .para { grid-template-columns: 1fr; gap: 14px; } }
 
@@ -451,8 +450,13 @@
     color: #2a2f45;
   }
   /* analysed term *italics* */
-  .para em, .para .term { font-style: italic; color: var(--ink-soft); }
-  .para .ar .term { font-style: normal; color: var(--gold); }
+  /* cited word or phrase — italic only */
+  .para em, .para .term { font-style: italic; color: inherit; }
+  .para .ar .term { font-style: normal; color: inherit; }
+  /* a word the author is introducing and defining under this root */
+  .headword { font-weight: 700; }
+  .para .en .headword { font-style: italic; color: var(--ink-soft); }
+  .para .ar .headword { font-style: normal; color: var(--gold); }
   /* Qur'anic shāhid **{ }** */
   .shahid { font-weight: 700; color: var(--ink); }
   .para .ar .shahid { font-family: var(--arabic); }
@@ -572,7 +576,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 11</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 12</span>
   </footer>
 
 </div>
@@ -616,7 +620,8 @@ function norm(s) {
 function fmt(t) {
   if (!t) return "";
   let o = t.replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
-  o = o.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">{ $1 }</span>');
+  o = o.replace(/\*\*\{\s*([\s\S]*?)\s*\}\*\*/g, '<span class="shahid">{$1}</span>');
+  o = o.replace(/\*\*([^*{}]+)\*\*/g, '<span class="headword">$1</span>');
   o = o.replace(/\*([^*]+)\*/g, '<span class="term">$1</span>');
   return o;
 }
