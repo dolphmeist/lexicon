@@ -1,0 +1,77 @@
+{
+ "lexicon": "sihah",
+ "root": "صدق",
+ "root_display": "صدق",
+ "forms": [
+  "صدق",
+  "صادق",
+  "صديق",
+  "صديقة",
+  "صداقة",
+  "صداق",
+  "صدقة",
+  "تصدق",
+  "مصدق",
+  "متصدق",
+  "مصداق",
+  "مصدق",
+  "صندوق",
+  "صدقات"
+ ],
+ "citation": {
+  "volume": 4,
+  "page_from": 1505,
+  "page_to": 1506
+ },
+ "entries": [
+  {
+   "ar": "الصدق: خلاف الكذب. وقد صدق فى الحديث . ويقال أيضا: صدقه الحديث. وفى المثل: «صدقنى سن بكره»، وذلك أنه لما نفر قال له: هدع ؛ وهى كلمة تسكن بها صغار الإبل إذا نفرت. وصدقوهم القتال. وتصادقا فى الحديث وفى المودة. والمصدق: الذى يصدقك فى حديثك، والذى يأخذ صدقات الغنم. والمتصدق: الذى يعطى الصدقة. ومررت برجل يسأل، ولا تقل يتصدق، والعامة تقوله، وإنما المتصدق الذى يعطى.",
+   "ar_vocalised": "الصِدْقُ: خلاف الكذب. وقد صَدَقَ في الحديث . ويقال أيضاً: صدقه الحديث. وفى المثل: \" صدقنى سن بكره \"، وذلك أنه لما نفر قال له: هدع ، وهى كلمة تسكن بها صغار الابل إذا نفرت. وصدقوهم القتال. وتصادقا في الحديث وفي المودّة. والمُصَدٍِّقُ: الذي يُصَدِّقُكَ في حديثك، والذي يأخذ صدقات الغنم. والمتصدق: الذى يُعطي الصَدَقَةَ. ومررت برجلٍ يسأل، ولا تقل يتصدق، والعامة تقوله، وإنما المتصدق الذى يعطى.",
+   "en": "**Al-ṣidq** is the contrary of falsehood. One says *ṣadaqa* in what he reports; and one also says *ṣadaqahu al-ḥadītha*, he told him the truth of the matter. And in the proverb: “*ṣadaqanī sinna bakrihi*” — “he told me the truth about the age of his young camel.” That is because, when the beast bolted, its owner called after it *hidaʿ*, a word by which young camels are quieted when they take fright. *Ṣadaqūhum al-qitāla*: they pressed the attack home against them. *Taṣādaqā*: the two dealt truthfully with one another in speech and in affection. **Al-muṣaddiq** is the one who believes you in what you say; and also the one who collects the alms-dues on sheep. **Al-mutaṣaddiq** is the one who gives the alms. One says, “I passed a man begging,” and you should not say “a man *yataṣaddaq*” — the common people say it, but *al-mutaṣaddiq* is only the one who gives.",
+   "pg": "4:1505",
+   "note": ""
+  },
+  {
+   "ar": "وقوله تعالى: إن المصدقين والمصدقات بتشديد الصاد، أصله المتصدقين فقلبت التاء صادا وأدغمت فى مثلها.",
+   "ar_vocalised": "وقوله تعالى: {إنَّ المُصَّدِّقينَ والمُصَّدِّقاتِ} بتشديد الصاد، أصله المُتًصَدِّقينَ فقلبت التاء صاداً وأدغمت في مُثله",
+   "en": "And His words, exalted be He, **{Indeed the almsgiving men and the almsgiving women}**, with the ṣād doubled: its origin is *al-mutaṣaddiqīn*, the tā' being turned into ṣād and assimilated into its like.",
+   "pg": "4:1506",
+   "note": ""
+  },
+  {
+   "ar": "والصداقة والمصادقة: المخالة، والرجل صديق والأنثى صديقة والجمع أصدقاء، وقد يقال للواحد والجمع والمؤنث صديق. قال الشاعر : نصبن الهوى ثم ارتمين قلوبنا … بأعين أعداء وهن صديق ويقال: فلان صديقى، أى أخص أصدقائى، وإنما يصغر على جهة المدح، كقول حباب بن المنذر@HAD08 :«أنا جذيلها المحكك، وعذيقها المرجب».",
+   "ar_vocalised": "والصَداقَةُ والمُصادَقَةُ: المُخَالَةُ، والرجل صَديقٌ والأنثى صَديقَةٌ والجمع أَصْدِقاءُ، وقد يقال للواحد والجمع والمؤنث صَديقٌ. قال الشاعر : نَصَبْنَ الهَوى ثم ارْتَمَيْنَ قُلوبَنا بأَعْيُنِ أعداءٍ وهُنَّ صَديقُ ويقال: فلان صديقى، أي أخص أصدقائى، وإنما يصغَّر على جهة المدح، كقول حباب بن المنذر: \" أنا جُذَيلُها المحكك، وعذيقها المرجب \".",
+   "en": "**Al-ṣadāqa** and **al-muṣādaqa**: close friendship. The man is *ṣadīq* and the woman *ṣadīqa*, the plural being *aṣdiqā'*; and *ṣadīq* may be used alike for the singular, the plural and the feminine. The poet said: _They set love up as a mark, then shot our hearts / with the eyes of enemies, and they are friends._ One says “so-and-so is my *ṣudayyiq*,” meaning the closest of my friends — the diminutive being used here by way of praise, as in the saying of Ḥubāb ibn al-Mundhir: “I am her rubbing-post and her propped palm-trunk.”",
+   "pg": "4:1506",
+   "note": ""
+  },
+  {
+   "ar": "والصديق، مثال الفسيق: الدائم التصديق، ويكون الذى يصدق قوله بالعمل.",
+   "ar_vocalised": "والصديق، مثال الفسيق: الدائم التَصْديقِ، ويكون الذي يُصَدِّقُ قولَه بالعمل.",
+   "en": "**Al-ṣiddīq**, on the pattern of *fissīq*: the one unceasing in believing; and it may mean one who confirms his word by his deed.",
+   "pg": "4:1506",
+   "note": ""
+  },
+  {
+   "ar": "والصدق، بالفتح: الصلب من الرماح، ويقال المستوى. ويقال أيضا: رجل صدق اللقاء، وصدق النظر، وقوم صدق بالضم، مثل فرس ورد وأفراس ورد، وجون وجون.",
+   "ar_vocalised": "والصَدْقُ، بالفتح: الصُلبُ من الرماح، ويقال المستوِي. ويقال أيضاً: رجل صدق اللقاء، وصدق النظر، وقوم صدق بالضم، مثل فرس ورد وأفراس ورد، وجون وجون.",
+   "en": "**Al-ṣadq**, with fatḥa: what is hard, of spears; and it is said, the straight. One says also a man *ṣadqu al-liqā'* — firm in the encounter — and *ṣadqu al-naẓar*, piercing of glance; and a people *ṣudq*, with ḍamma, as *farasun wardun* gives *afrāsun wurdun*, and *jawnun* gives *jūnun*.",
+   "pg": "4:1506",
+   "note": ""
+  },
+  {
+   "ar": "وهذا مصداق هذا، أى ما يصدقه. ويقال للرجل الشجاع والفرس الجواد: إنه لذو مصدق بالفتح، أى صادق الحملة وصادق الجرى، كأنه ذو صدق فيما يعدك من ذلك. قال خفاف بن ندبة: إذا ما استحمت أرضه من سمائه … جرى وهو مودوع وواعد مصدق يقول: إذا ابتلت حوافره من عرق أعاليه جرى وهو متروك لا يضرب ولا يزجر، ويصدقك فيما يعدك من البلوغ إلى الغاية.",
+   "ar_vocalised": "وهذا مصداق هذا، أي ما يُصَدِّقُهُ. ويقال للرجل الشجاع والفرسِ الجوادِ: إنّه لذو مَصْدَق بالفتح، أي صادِقُ الحملة وصادق الجرى، كأنه ذو صِدْقٍ فيما يَعِدُكَ من ذلك. قال حفاف بن ندبة: إذا ما استحمّتْ أَرْضُهُ من سمائه جَرى وهو مَوْدوعٌ وواعِدُ مَصْدَقِ يقول: إذا ابتلّتْ حوافره من عَرَقِ أعاليه جرى وهو متروكٌ لا يضرب ولا يزجر، ويصدقك فيما يَعِدُكَ من البلوغ إلى الغاية.",
+   "en": "**Hādhā miṣdāqu hādhā**: this is what proves that true. Of the brave man and of the swift horse one says he is *dhū maṣdaqin*, with fatḥa — that is, true in his charge and true in his running, as though possessed of truthfulness in what it promises you of that. Ḳufāf ibn Nadba said: _When its earth is drenched from its own sky / it runs, left to itself, a promiser who makes good._ He means: when its hooves are wet with the sweat of its upper parts it runs, left alone, neither struck nor urged on, and it makes good to you what it promises of reaching the goal.",
+   "pg": "4:1506",
+   "note": ""
+  },
+  {
+   "ar": "والصدقة: ما تصدقت به على الفقراء. والصداق والصداق: مهر المرأة، وكذلك الصدقة، ومنه قوله تعالى: وآتوا النساء صدقاتهن نحلة، والصدقة مثله، بالضم وتسكين الدال. وقد أصدقت المرأة، إذا سميت لها صداقا: قال يعقوب: هى الصندوق بالصاد، والجمع الصناديق.",
+   "ar_vocalised": "والصَدَقَةُ: ما تَصَدَّقْتَ به على الفقراء. والصَداقُ والصِداقُ: مَهْرُ المرأةِ، وكذلك الصَدُقَةُ، ومنه قوله تعالى: {وآتوا النساءَ صَدُقاتِهِنَّ نِحْلَةً} ، والصدقة مثله، بالضم وتسكين الدال. وقد أصدقت المرأة، إذا سميت لها صداقا: قال يعقوب: هي الصندوق بالصاد، والجمع الصنادي",
+   "en": "**Al-ṣadaqa**: what you give as alms to the poor. **Al-ṣadāq** and **al-ṣidāq**: a woman's dower; and so too *al-ṣaduqa*. Hence His words, exalted be He, **{And give women their dowers as a free gift}**; and *al-ṣudqa* is the same, with ḍamma and a quiescent dāl. *Aṣdaqtu al-mar'ata* when he named her a dower. Yaʿqūb said: it is *al-ṣundūq*, with ṣād, the plural being *al-ṣanādīq*.",
+   "pg": "4:1506",
+   "note": ""
+  }
+ ]
+}

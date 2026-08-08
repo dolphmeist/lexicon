@@ -583,7 +583,7 @@
   </section>
 
   <footer>
-    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 17</span>
+    Text sourced from named print editions via the OpenITI / Shamela open corpora. Translations and collation are editorial.<br><span style="opacity:.55;font-size:11px">build 19 — Tāj al-ʿArūs added</span>
   </footer>
 
 </div>
@@ -623,14 +623,32 @@ const LEXICA = [
            publisher: "Dār al-Qalam / al-Dār al-Shāmiyya", arPublisher: "دار القلم والدار الشامية",
            edn: "1st edn", arEdn: "الطبعة الأولى",
            year: "1412 AH", arYear: "١٤١٢هـ", vols: 1 } },
-  { id: "taj",     book: "Tāj al-ʿArūs", author: "al-Zabīdī", died: "1205 / 1791",
-    ar: "تاج العروس", arAuthor: "الزبيدي" },
+  { id: "taj",
+    book: "Tāj al-ʿArūs", bookFull: "Tāj al-ʿArūs min Jawāhir al-Qāmūs",
+    author: "al-Zabīdī", died: "1205 / 1791",
+    ar: "تاج العروس من جواهر القاموس", arAuthor: "الزبيدي",
+    bib: { authorFull: "al-Zabīdī, Muḥammad ibn Muḥammad ibn ʿAbd al-Razzāq al-Ḥusaynī, Abū al-Fayḍ, Murtaḍā",
+           arAuthorFull: "الزبيدي، محمد بن محمد بن عبد الرزاق الحسيني، أبو الفيض، مرتضى",
+           editor: "a group of editors", arEditor: "مجموعة من المحققين",
+           place: "", arPlace: "",
+           publisher: "Dār al-Hidāya", arPublisher: "دار الهداية",
+           edn: "", arEdn: "",
+           year: "", arYear: "", vols: 40 } },
   { id: "qamus",   book: "al-Qāmūs al-Muḥīṭ", author: "al-Fīrūzābādī", died: "817 / 1415",
     ar: "القاموس المحيط", arAuthor: "الفيروزآبادي" },
   { id: "maqayis", book: "Maqāyīs al-Lugha", author: "Ibn Fāris", died: "395 / 1004",
     ar: "مقاييس اللغة", arAuthor: "ابن فارس" },
-  { id: "sihah",   book: "al-Ṣiḥāḥ", author: "al-Jawharī", died: "393 / 1003",
-    ar: "الصحاح", arAuthor: "الجوهري" }
+  { id: "sihah",
+    book: "al-Ṣiḥāḥ", bookFull: "al-Ṣiḥāḥ: Tāj al-Lugha wa-Ṣiḥāḥ al-ʿArabiyya",
+    author: "al-Jawharī", died: "393 / 1003",
+    ar: "الصحاح تاج اللغة وصحاح العربية", arAuthor: "الجوهري",
+    bib: { authorFull: "al-Jawharī, Abū Naṣr Ismāʿīl ibn Ḥammād al-Fārābī",
+           arAuthorFull: "الجوهري، أبو نصر إسماعيل بن حماد الفارابي",
+           editor: "Aḥmad ʿAbd al-Ġafūr ʿAṭṭār", arEditor: "أحمد عبد الغفور عطار",
+           place: "Beirut", arPlace: "بيروت",
+           publisher: "Dār al-ʿIlm li-l-Malāyīn", arPublisher: "دار العلم للملايين",
+           edn: "4th edn", arEdn: "الطبعة الرابعة",
+           year: "1407 AH / 1987", arYear: "١٤٠٧هـ", vols: 6 } }
 ];
 const lexLabel = l => `<span class="bk">${l.book}</span> <span class="au">(${l.author} d. ${l.died})</span>`;
 
@@ -892,14 +910,16 @@ async function render() {
     if (!b) return `${L.book}, vol. ${c.volume}, ${pages}, s.v. ${rec.root_display}.`;
     const ed = b.editor ? `, ed. ${b.editor}` : "";
     const vol = b.vols > 1 ? `vol. ${c.volume}, ` : "";
-    return `${b.authorFull}, ${L.bookFull || L.book}${ed} (${b.place}: ${b.publisher}, ${b.edn}, ${b.year}), ${vol}${pages}, s.v. ${rec.root_display}.`;
+    const imp = [b.place ? `${b.place}: ${b.publisher}` : b.publisher, b.edn, b.year].filter(Boolean).join(", ");
+    return `${b.authorFull}, ${L.bookFull || L.book}${ed} (${imp}), ${vol}${pages}, s.v. ${rec.root_display}.`;
   }
   function citeAr() {
     const pAr = c.page_from === c.page_to ? `ص ${arNum(c.page_from)}` : `ص ${arNum(c.page_from)}–${arNum(c.page_to)}`;
     if (!b) return `${L.ar}، ج ${arNum(c.volume)}، ${pAr}، مادة ${rec.root_display}.`;
     const ed = b.arEditor ? `، تحقيق ${b.arEditor}` : "";
     const vol = b.vols > 1 ? `ج ${arNum(c.volume)}، ` : "";
-    return `${b.arAuthorFull}، ${L.ar}${ed}، ${b.arPlace}: ${b.arPublisher}، ${b.arEdn}، ${b.arYear}، ${vol}${pAr}، مادة ${rec.root_display}.`;
+    const impAr = [b.arPlace ? `${b.arPlace}: ${b.arPublisher}` : b.arPublisher, b.arEdn, b.arYear].filter(Boolean).join("، ");
+    return `${b.arAuthorFull}، ${L.ar}${ed}، ${impAr}، ${vol}${pAr}، مادة ${rec.root_display}.`;
   }
   entryEl.querySelectorAll("[data-cite]").forEach(btn => {
     btn.addEventListener("click", () => {
